@@ -44,397 +44,7 @@
   }
   </script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311162e'/%3E%3Cpath d='M18 33c-6-4-5-13 2-14 4 0 6 3 7 7 3-4 7-6 11-3 6 4 5 13-1 18-5 5-13 8-16 5-2-2 1-6 3-9-2 0-4-1-6-4z' fill='%23ffcf5a'/%3E%3Ccircle cx='21' cy='20' r='5' fill='%23ff6b6b'/%3E%3Ccircle cx='35' cy='18' r='5' fill='%236ee7c7'/%3E%3C/svg%3E">
-  <style>
-    :root {
-      --ink: #11162e;
-      --paper: #f7f3e9;
-      --coral: #ff6b6b;
-      --yellow: #ffcf5a;
-      --mint: #6ee7c7;
-      --blue: #6677ff;
-      --white: #fffdf8;
-      --line: rgba(17, 22, 46, .16);
-      --shadow: 0 18px 0 rgba(17, 22, 46, .10);
-      --radius: 28px;
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; scroll-padding-top: 88px; }
-    @media (max-width: 620px) { html { scroll-padding-top: 110px; } }
-    body {
-      margin: 0;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 12% 4%, rgba(255, 207, 90, .32), transparent 24rem),
-        radial-gradient(circle at 92% 30%, rgba(110, 231, 199, .25), transparent 24rem),
-        var(--paper);
-      font-family: "Nunito", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
-      font-size: 1rem;
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-    h1, h2, h3, .desk-quote, .quip-line, .ticker-track { font-family: "Fredoka", "Nunito", sans-serif; }
-    button, a { font: inherit; }
-    button { touch-action: manipulation; }
-    a { color: inherit; }
-    .skip { position: fixed; left: 1rem; top: -6rem; z-index: 100; background: var(--white); padding: .7rem 1rem; border-radius: 12px; }
-    .skip:focus { top: 1rem; }
-    .shell { width: min(1160px, calc(100% - 32px)); margin: 0 auto; }
-    header { padding: 22px 0 12px; }
-    nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-    .brand { display: inline-flex; align-items: center; gap: .72rem; text-decoration: none; font-weight: 900; letter-spacing: -.03em; }
-    .brand-logo { width: 76px; height: 62px; object-fit: contain; filter: drop-shadow(2px 3px 0 rgba(17,22,46,.18)); }
-    .nav-links { display: flex; gap: .55rem; }
-    .nav-actions { display: flex; align-items: center; gap: .65rem; }
-    .nav-links a { text-decoration: none; font-weight: 800; padding: .55rem .85rem; border-radius: 99px; }
-    .nav-links a:hover, .nav-links a:focus-visible { background: var(--white); outline: 2px solid var(--ink); }
-    .language-switch { display: inline-flex; padding: 3px; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; background: rgba(255,255,255,.08); }
-    .lang-btn { min-width: 38px; min-height: 34px; padding: .25rem .55rem; border: 0; border-radius: 999px; background: transparent; color: rgba(255,255,255,.72); font-size: .78rem; font-weight: 900; cursor: pointer; }
-    .lang-btn[aria-pressed="true"] { background: var(--yellow); color: var(--ink); }
-    .lang-btn:focus-visible { outline: 2px solid white; outline-offset: 2px; }
-
-    .hero { padding: clamp(28px, 5vw, 64px) 0 72px; display: grid; grid-template-columns: minmax(0, .92fr) minmax(460px, 1.08fr); gap: clamp(28px, 5vw, 70px); align-items: center; }
-    .eyebrow { display: inline-flex; align-items: center; gap: .55rem; margin: 0 0 1rem; font-size: .88rem; font-weight: 900; letter-spacing: .11em; text-transform: uppercase; }
-    .eyebrow::before { content: ""; width: 28px; height: 8px; background: var(--coral); border: 2px solid var(--ink); border-radius: 99px; }
-    h1, h2, h3 { line-height: 1.04; margin: 0; letter-spacing: -.055em; }
-    h1 { font-size: clamp(3.3rem, 7.1vw, 6.8rem); max-width: 9ch; }
-    h1 .pop { display: inline-block; color: var(--coral); transform: rotate(-3deg); text-shadow: 3px 3px 0 var(--ink); -webkit-text-stroke: 2px var(--ink); }
-    .lead { max-width: 34rem; font-size: clamp(1.05rem, 1.7vw, 1.3rem); margin: 1.5rem 0 1.7rem; }
-    .hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 48px; padding: .7rem 1.1rem; border: 2px solid var(--ink); border-radius: 15px; font-weight: 900; text-decoration: none; background: var(--yellow); color: var(--ink); box-shadow: 4px 4px 0 var(--ink); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
-    .btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
-    .btn.secondary { background: var(--white); }
-
-    .store-actions { display: flex; flex-wrap: wrap; gap: .72rem; margin-top: 1.6rem; }
-    .official-store-link { display: inline-flex; align-items: center; justify-content: center; min-height: 64px; border-radius: 12px; text-decoration: none; transition: transform .15s ease, filter .15s ease; }
-    .official-store-link:hover { transform: translateY(-2px); filter: brightness(1.04); }
-    .official-store-link:focus-visible { outline: 3px solid var(--mint); outline-offset: 4px; }
-    .official-store-link img { display: block; width: auto; max-width: 100%; }
-    .official-store-link .google-badge { height: 68px; }
-    .official-store-link .apple-badge { height: 56px; }
-    .official-store-link .badge-en { display: none; }
-    html[lang="en"] .official-store-link .badge-tr { display: none; }
-    html[lang="en"] .official-store-link .badge-en { display: block; }
-    .demo-text-link { margin-top: 1.1rem; padding: 0; border: 0; background: transparent; color: var(--ink); font-weight: 900; text-decoration: underline; text-underline-offset: 5px; cursor: pointer; }
-    .hero-showcase { position: relative; transform: rotate(1.2deg); }
-    .hero-showcase img { width: 100%; display: block; aspect-ratio: 1024 / 500; object-fit: cover; border: 3px solid var(--ink); border-radius: 32px; box-shadow: 12px 14px 0 var(--mint); }
-    .hero-badge { position: absolute; right: -12px; bottom: -22px; padding: .78rem 1rem; border: 2px solid var(--ink); border-radius: 17px; background: var(--yellow); box-shadow: 5px 5px 0 var(--ink); font-weight: 900; transform: rotate(-3deg); }
-
-    .drawer-backdrop { position: fixed; inset: 0; z-index: 79; border: 0; background: rgba(5,9,22,.55); opacity: 0; pointer-events: none; transition: opacity .22s ease; }
-    .demo-rail { position: fixed; z-index: 81; right: 0; top: 46%; min-height: 142px; padding: .8rem .58rem; border: 2px solid var(--ink); border-right: 0; border-radius: 16px 0 0 16px; background: var(--yellow); color: var(--ink); box-shadow: -5px 5px 0 var(--ink); writing-mode: vertical-rl; transform: translateY(-50%); font-weight: 900; letter-spacing: .08em; cursor: pointer; }
-    .demo-drawer { position: fixed; z-index: 80; inset: 0 0 0 auto; width: min(620px, calc(100vw - 54px)); height: 100dvh; padding: 18px; overflow-y: auto; background: var(--paper); border-left: 3px solid var(--ink); box-shadow: -20px 0 50px rgba(17,22,46,.24); transform: translateX(105%); transition: transform .28s cubic-bezier(.2,.8,.2,1); }
-    .demo-drawer.is-open { transform: translateX(0); }
-    body.demo-open { overflow: hidden; }
-    body.demo-open .drawer-backdrop { opacity: 1; pointer-events: auto; }
-    body.demo-open .demo-rail { opacity: 0; pointer-events: none; }
-    .drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 2px 2px 14px; }
-    .drawer-head div { display: grid; }
-    .drawer-head small { font-weight: 900; letter-spacing: .1em; color: #61667a; }
-    .drawer-head strong { font-size: 1.35rem; }
-    .drawer-close { width: 44px; height: 44px; border: 2px solid var(--ink); border-radius: 50%; background: white; color: var(--ink); font-size: 1.3rem; font-weight: 900; cursor: pointer; }
-    .demo-drawer .arcade { max-width: none; margin: 0; transform: none; box-shadow: 8px 9px 0 var(--coral); }
-
-    .arcade { position: relative; background: var(--ink); color: var(--white); border: 3px solid var(--ink); border-radius: 34px; padding: 14px; box-shadow: 12px 14px 0 var(--coral); transform: rotate(1deg); }
-    .arcade::before { content: ""; position: absolute; width: 88px; height: 23px; background: var(--yellow); top: -10px; right: 52px; transform: rotate(-7deg); opacity: .9; }
-    .arcade-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 8px 8px 14px; }
-    .lights { display: flex; gap: 7px; }
-    .lights i { width: 11px; height: 11px; border-radius: 50%; display: block; background: var(--coral); }
-    .lights i:nth-child(2) { background: var(--yellow); }
-    .lights i:nth-child(3) { background: var(--mint); }
-    .scoreline { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 800; font-size: .84rem; }
-    .game-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
-    .game-tab { border: 0; border-radius: 12px; color: var(--white); background: rgba(255,255,255,.10); min-height: 46px; font-weight: 900; cursor: pointer; }
-    .game-tab[aria-selected="true"] { color: var(--ink); background: var(--mint); }
-    .screen { position: relative; width: 100%; margin-inline: auto; background: #d9f7ee; border: 3px solid #080b1b; border-radius: 21px; overflow: hidden; transition: width .25s ease, aspect-ratio .25s ease; }
-    .screen.jump-mode { width: min(100%, 400px); aspect-ratio: 400 / 700; }
-    .screen.pop-mode { aspect-ratio: 680 / 400; }
-    canvas { display: block; width: 100%; height: 100%; }
-    .game-overlay { position: absolute; inset: 0; display: grid; place-items: center; padding: 1.2rem; text-align: center; background: rgba(17,22,46,.84); color: white; }
-    .game-overlay[hidden] { display: none; }
-    .overlay-card { max-width: 290px; }
-    .overlay-card strong { display: block; font-size: 1.55rem; line-height: 1.1; margin-bottom: .65rem; }
-    .overlay-card p { margin: 0 0 1rem; color: rgba(255,255,255,.82); }
-    .game-controls { display: grid; grid-template-columns: 1fr 1.2fr 1fr auto; gap: 8px; padding-top: 10px; }
-    .control { border: 2px solid rgba(255,255,255,.25); min-height: 46px; border-radius: 13px; background: rgba(255,255,255,.1); color: white; font-weight: 900; cursor: pointer; }
-    .control:active { background: var(--coral); }
-    .control.center { padding-inline: 1rem; color: var(--yellow); }
-
-    .ticker { border-block: 3px solid var(--ink); background: var(--yellow); overflow: hidden; transform: rotate(-1deg); }
-    .ticker-track { display: flex; width: max-content; gap: 2rem; padding: .72rem 0; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; animation: crawl 22s linear infinite; }
-    .ticker-track span::after { content: "✦"; margin-left: 2rem; }
-    @keyframes crawl { to { transform: translateX(-50%); } }
-
-    .games-showcase { padding: 92px 0 70px; }
-    .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-    .game-card { position: relative; min-height: 520px; border: 3px solid var(--ink); border-radius: 32px; overflow: hidden; color: white; box-shadow: 10px 12px 0 var(--ink); isolation: isolate; }
-    .game-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .45s cubic-bezier(.2,.8,.2,1); z-index: -2; }
-    .game-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,9,22,.03) 30%, rgba(5,9,22,.94) 100%); z-index: -1; }
-    .game-card:hover img { transform: scale(1.035); }
-    .game-card-copy { position: absolute; inset: auto 0 0; padding: 34px; }
-    .game-card-copy small { display: block; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: var(--yellow); margin-bottom: .6rem; }
-    .game-card-copy h3 { font-size: clamp(2.3rem, 4vw, 4rem); margin-bottom: .65rem; }
-    .game-card-copy p { max-width: 34rem; margin: 0 0 1.1rem; color: rgba(255,255,255,.82); }
-    .game-card .btn { box-shadow: 4px 4px 0 white; }
-
-    section { padding: 100px 0; }
-    .section-head { display: grid; grid-template-columns: .8fr 1.2fr; gap: 2rem; align-items: end; margin-bottom: 42px; }
-    .section-head h2 { font-size: clamp(2.5rem, 5vw, 5rem); max-width: 9ch; }
-    .section-head p { max-width: 43rem; margin: 0; font-size: 1.12rem; }
-    .process { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; counter-reset: step; }
-    .step { min-height: 290px; padding: 24px; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--white); box-shadow: var(--shadow); counter-increment: step; }
-    .step:nth-child(2) { background: var(--mint); transform: translateY(22px); }
-    .step:nth-child(3) { background: var(--coral); color: var(--ink); }
-    .step:nth-child(4) { background: var(--blue); color: white; transform: translateY(22px); }
-    .step::before { content: "0" counter(step); display: block; font-size: .85rem; font-weight: 900; letter-spacing: .12em; margin-bottom: 4.2rem; }
-    .step h3 { font-size: 1.7rem; margin-bottom: .9rem; }
-    .step p { margin: 0; }
-
-    .lab { background: var(--ink); color: var(--white); border-radius: 48px 48px 0 0; padding-bottom: 110px; }
-    .lab .section-head { padding-top: 90px; }
-    .workshop-wall { display: grid; grid-template-columns: minmax(0, 1.28fr) minmax(280px, .72fr); gap: 18px; }
-    .finale { text-align: center; padding: 110px 0 80px; }
-    .finale h2 { font-size: clamp(3rem, 7vw, 7rem); max-width: 11ch; margin: 0 auto 1.5rem; }
-    .finale .btn { font-size: 1.12rem; padding: .85rem 1.4rem; }
-    footer { padding: 24px 0 36px; border-top: 2px solid var(--line); }
-    footer .shell { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-weight: 800; }
-    .pulse { display: inline-block; animation: pulse 1.6s ease-in-out infinite; }
-    @keyframes pulse { 50% { transform: scale(1.18) rotate(8deg); } }
-    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition: none !important; } }
-    @media (max-width: 900px) {
-      .hero { grid-template-columns: 1fr; padding-top: 34px; }
-      h1 { max-width: 10ch; }
-      .hero-showcase { max-width: 720px; transform: none; }
-      .process { grid-template-columns: repeat(2, 1fr); }
-      .step:nth-child(2), .step:nth-child(4) { transform: none; }
-      .workshop-wall, .prototype-row, .gossip-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 620px) {
-      .shell { width: min(100% - 22px, 1160px); }
-      .nav-links a:not(:last-child) { display: none; }
-      .brand-logo { width: 64px; height: 52px; }
-      .hero { padding-bottom: 54px; }
-      h1 { font-size: clamp(3.15rem, 16vw, 5.2rem); }
-      .lead { font-size: 1.05rem; }
-      .store-actions { display: grid; grid-template-columns: 1fr; }
-      .store-actions .official-store-link { justify-self: start; }
-      .finale-stores .official-store-link { justify-self: center; }
-      .hero-showcase img { border-radius: 24px; box-shadow: 7px 8px 0 var(--mint); }
-      .hero-badge { right: 8px; bottom: -18px; }
-      .demo-rail { top: auto; right: 12px; bottom: 12px; min-height: 0; padding: .72rem 1rem; border-right: 2px solid var(--ink); border-radius: 14px; writing-mode: horizontal-tb; transform: none; }
-      .demo-drawer { width: 100%; padding: 10px; border-left: 0; }
-      .arcade { border-radius: 24px; padding: 10px; box-shadow: 7px 8px 0 var(--coral); }
-      .screen { border-radius: 15px; }
-      section { padding: 72px 0; }
-      .section-head { grid-template-columns: 1fr; margin-bottom: 30px; }
-      .process { grid-template-columns: 1fr; }
-      .games-grid { grid-template-columns: 1fr; }
-      .game-card { min-height: 440px; box-shadow: 7px 8px 0 var(--ink); }
-      .game-card-copy { padding: 24px; }
-      .step { min-height: 230px; }
-      .step::before { margin-bottom: 2.5rem; }
-      .lab { border-radius: 0; padding: 56px 0 64px; }
-      .lab .section-head { padding-top: 0; }
-    }
-
-    /* Premium arcade storefront refresh */
-    :root {
-      --ink: #0c1025;
-      --paper: #f6f2e8;
-      --coral: #ff5964;
-      --yellow: #ffd24a;
-      --mint: #56e6c1;
-      --blue: #745cff;
-      --white: #fffdf8;
-    }
-    body { background: var(--paper); }
-    header { position: sticky; top: 0; z-index: 70; padding: 10px 0; color: white; background: rgba(8,11,27,.92); border-bottom: 1px solid rgba(255,255,255,.1); backdrop-filter: blur(18px); }
-    .brand-logo { width: 84px; height: 62px; }
-    .nav-links a { color: rgba(255,255,255,.82); }
-    .nav-links a:hover, .nav-links a:focus-visible { color: var(--ink); background: var(--yellow); outline: 0; }
-    .hero-stage { position: relative; isolation: isolate; overflow: hidden; padding: 0; background:
-      radial-gradient(circle at 82% 18%, rgba(116,92,255,.52), transparent 29rem),
-      radial-gradient(circle at 12% 88%, rgba(255,89,100,.34), transparent 25rem),
-      linear-gradient(135deg, #0a0d20 0%, #131a3b 58%, #0a0d20 100%); }
-    .hero-stage::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .16; background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 54px 54px; mask-image: linear-gradient(to bottom, black, transparent 88%); }
-    .hero { min-height: 760px; padding-block: clamp(70px, 8vw, 118px); color: white; }
-    .hero .eyebrow { color: var(--yellow); }
-    .hero .eyebrow::before { background: var(--mint); border-color: white; }
-    .hero h1 { max-width: 8.5ch; font-size: clamp(4.4rem, 7.4vw, 7.6rem); letter-spacing: -.07em; }
-    .hero h1 .pop { color: var(--yellow); text-shadow: 4px 4px 0 var(--coral); -webkit-text-stroke: 1.5px white; }
-    .hero .lead { max-width: 39rem; color: rgba(255,255,255,.76); }
-    .store-actions { margin-top: 1.8rem; }
-    .hero-copy > * { animation: heroRise .7s cubic-bezier(.2,.8,.2,1) both; }
-    .hero-copy > *:nth-child(1) { animation-delay: .04s; }
-    .hero-copy > *:nth-child(2) { animation-delay: .12s; }
-    .hero-copy > *:nth-child(3) { animation-delay: .2s; }
-    .hero-copy > *:nth-child(4) { animation-delay: .28s; }
-    .hero-copy > *:nth-child(5) { animation-delay: .36s; }
-    .hero-showcase { animation: heroFloat 5.5s ease-in-out infinite; }
-    @keyframes heroRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-    @keyframes heroFloat { 0%, 100% { transform: rotate(1.4deg) translateY(0); } 50% { transform: rotate(1.4deg) translateY(-8px); } }
-    .demo-text-link { color: white; text-decoration-color: var(--mint); }
-    .hero-showcase { position: relative; }
-    .hero-showcase::before { content: ""; position: absolute; inset: -16px 26px 18px -18px; z-index: -1; border: 1px solid rgba(255,255,255,.25); border-radius: 42px; transform: rotate(-3deg); }
-    .hero-showcase img { aspect-ratio: 16 / 9; border: 2px solid rgba(255,255,255,.7); border-radius: 38px; box-shadow: 18px 18px 0 var(--coral), -10px -10px 0 rgba(116,92,255,.58); }
-    .hero-badge { right: -18px; bottom: -28px; padding: .9rem 1.1rem; border: 0; border-radius: 999px; background: var(--yellow); box-shadow: 6px 6px 0 var(--ink); font-size: .82rem; letter-spacing: .06em; }
-    .ticker { position: relative; z-index: 2; border-block: 0; background: var(--yellow); transform: none; box-shadow: 0 6px 0 var(--ink); }
-    .ticker-track { padding: .9rem 0; }
-    .games-showcase { padding: 126px 0 116px; }
-    .games-showcase .section-head { grid-template-columns: 1fr 1fr; }
-    .games-showcase .section-head h2 { max-width: 11ch; }
-    .games-showcase .section-head p { justify-self: end; }
-    .games-grid { gap: 30px; align-items: start; }
-    .game-card { display: flex; flex-direction: column; min-height: 0; border: 0; border-radius: 42px; background: #10142c; box-shadow: 0 28px 70px rgba(12,16,37,.22); }
-    .game-card:first-child { transform: rotate(-1deg); }
-    .game-card:last-child { transform: translateY(42px) rotate(1deg); }
-    .game-card img { position: relative; inset: auto; z-index: 0; height: auto; aspect-ratio: 16 / 9; object-fit: cover; object-position: center; }
-    .game-card::after { content: none; }
-    .game-card-copy { position: relative; inset: auto; padding: 28px 32px 32px; }
-    .game-card-copy small { display: inline-flex; padding: .35rem .58rem; border-radius: 999px; background: rgba(255,210,74,.95); color: var(--ink); }
-    .game-card-copy p { max-width: 31rem; color: rgba(255,255,255,.78); }
-    .game-card .btn { border-color: white; box-shadow: 4px 4px 0 white; }
-    .game-features { margin: 0 0 1.2rem; color: rgba(255,255,255,.62); font-size: .92rem; font-weight: 800; letter-spacing: .01em; }
-    .game-card .btn.secondary { margin-left: .45rem; border-color: rgba(255,255,255,.48); background: rgba(12,16,37,.38); color: white; box-shadow: none; backdrop-filter: blur(8px); }
-    #surec { margin-top: 42px; color: var(--ink); background: var(--yellow); border-radius: 56px 56px 0 0; }
-    #surec .section-head h2 { max-width: 12ch; }
-    .process-story { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(26px, 5vw, 64px); align-items: center; margin-bottom: 54px; }
-    .process-gallery { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; transform: rotate(-1deg); }
-    .process-gallery::before { content: ""; position: absolute; inset: 18px -18px -18px 18px; z-index: 0; border-radius: 34px; background: var(--coral); }
-    .story-shot { position: relative; z-index: 1; margin: 0; overflow: hidden; aspect-ratio: 1; border: 3px solid var(--ink); border-radius: 26px; background: var(--ink); }
-    .story-shot img { width: 100%; height: 100%; display: block; object-fit: cover; }
-    .story-shot:nth-child(1) img { object-position: 50% 58%; }
-    .story-shot:nth-child(2) img { object-position: 50% 38%; }
-    .story-shot:nth-child(3) img { object-position: 50% 64%; }
-    .story-shot:nth-child(4) img { object-position: 50% 44%; }
-    .process-story-copy { padding: clamp(4px, 2vw, 28px) 0; }
-    .process-kicker { display: inline-flex; padding: .4rem .65rem; margin: 0 0 1.1rem; border-radius: 999px; background: var(--ink); color: white; font-size: .78rem; font-weight: 900; letter-spacing: .11em; }
-    .process-story-copy h3 { max-width: 12ch; font-size: clamp(2.4rem, 5vw, 5rem); }
-    .process-story-copy p { max-width: 35rem; margin: 1.25rem 0 0; font-size: 1.08rem; }
-    .step { border: 0; background: white; box-shadow: 0 16px 0 rgba(12,16,37,.1); }
-    .step:nth-child(2) { background: var(--mint); }
-    .step:nth-child(3) { background: var(--coral); }
-    .step:nth-child(4) { background: var(--blue); color: white; }
-    .step::before { color: rgba(12,16,37,.48); }
-    .shipaton-banner { position: relative; margin: 72px 0 0; overflow: hidden; border: 3px solid var(--ink); border-radius: 38px; background: var(--ink); box-shadow: 14px 16px 0 rgba(12,16,37,.16); }
-    .shipaton-banner img { width: 100%; display: block; aspect-ratio: 16 / 9; object-fit: cover; }
-    .shipaton-banner figcaption { position: absolute; right: 18px; bottom: 18px; padding: .62rem .85rem; border-radius: 999px; background: rgba(8,11,27,.84); color: white; font-weight: 900; backdrop-filter: blur(12px); }
-    .lab { position: relative; overflow: hidden; border-radius: 0; padding: 72px 0 84px; background:
-      radial-gradient(circle at 8% 0%, rgba(255,210,74,.14), transparent 24rem),
-      radial-gradient(circle at 96% 100%, rgba(86,230,193,.12), transparent 22rem),
-      #0a0d20; }
-    .lab::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .45; background-image: radial-gradient(rgba(255,255,255,.16) 1.1px, transparent 1.1px); background-size: 22px 22px; mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent); }
-    .lab > .shell { position: relative; z-index: 1; }
-    .lab .section-head { display: block; max-width: 44rem; padding-top: 0; margin-bottom: 28px; }
-    .lab .section-head h2 { max-width: 10ch; }
-    .lab .section-head p { max-width: 34rem; margin-top: .85rem; color: rgba(255,255,255,.74); font-size: 1.18rem; }
-    .desk-hero, .desk-rule, .proto { position: relative; border-radius: 32px; }
-    .desk-hero { display: flex; flex-direction: column; justify-content: space-between; min-height: 420px; padding: 36px 36px 30px; background: #fffdf8; color: var(--ink); box-shadow: 0 24px 48px rgba(0,0,0,.28); transform: rotate(-.6deg); }
-    .washi { position: absolute; top: 16px; left: 50%; width: 86px; height: 18px; transform: translateX(-50%) rotate(-7deg); background: rgba(255,210,74,.78); border-radius: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
-    .note-kicker { margin: 18px 0 0; font-size: .75rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
-    .desk-quote { max-width: 14ch; margin: .85rem 0 1.2rem; padding-right: 1.5rem; font-size: clamp(2.35rem, 4vw, 3.7rem); font-weight: 900; letter-spacing: -.055em; line-height: 1.02; }
-    .qmark { display: block; color: var(--coral); font-size: .72em; line-height: .8; }
-    .desk-caption { max-width: 28rem; margin: 0 92px 0 0; font-weight: 800; }
-    .paw-stamp { position: absolute; right: 18px; bottom: 16px; width: 78px; height: 78px; transform: rotate(16deg); opacity: .92; }
-    .desk-rule { display: flex; flex-direction: column; justify-content: space-between; min-height: 420px; padding: 32px 28px 28px; overflow: hidden; background: var(--coral); color: var(--ink); box-shadow: 0 22px 44px rgba(0,0,0,.26); transform: rotate(.8deg); }
-    .desk-rule .note-kicker { margin-top: 8px; padding-right: 68px; }
-    .desk-rule > div { position: relative; z-index: 1; max-width: 14ch; }
-    .desk-rule h3 { max-width: 8ch; margin-top: 0; font-size: clamp(2.5rem, 4vw, 4rem); }
-    .desk-rule p { max-width: 18ch; margin: 1rem 0 0; font-weight: 800; }
-    .rule-index { position: absolute; top: 22px; right: 22px; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: rgba(12,16,37,.14); font-size: 1.05rem; font-weight: 900; letter-spacing: 0; line-height: 1; pointer-events: none; }
-    .prototype-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 6px; }
-    .proto { display: flex; flex-direction: column; min-height: 280px; padding: 34px 24px 22px; color: var(--ink); box-shadow: 0 18px 36px rgba(0,0,0,.24); }
-    .proto .note-kicker { margin-top: 8px; }
-    .proto h3 { margin: .85rem 0 .55rem; font-size: clamp(1.7rem, 2.2vw, 2.25rem); }
-    .proto p { margin: 0; font-weight: 700; }
-    .proto-jump { background: var(--mint); transform: rotate(-1.1deg); }
-    .proto-pop { background: var(--yellow); transform: rotate(.7deg); }
-    .proto-world { background: var(--blue); color: white; transform: rotate(-.4deg); }
-    .proto::before { content: ""; position: absolute; top: 12px; left: 50%; width: 70px; height: 16px; transform: translateX(-50%) rotate(-4deg); border-radius: 2px; background: rgba(255,255,255,.42); }
-    .stamp { align-self: flex-start; margin-top: auto; padding: .32rem .62rem; border: 2px dashed currentColor; border-radius: 10px; font-size: .72rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; transform: rotate(-8deg); }
-    .desk-hero:hover, .desk-rule:hover, .proto:hover, .quip:hover { transform: rotate(0deg) translateY(-4px); }
-    .desk-hero, .desk-rule, .proto, .quip { transition: transform .2s ease; }
-    .gossip { margin: 0; padding: 88px 0 100px; background: var(--yellow); color: var(--ink); }
-    .gossip-head { max-width: 40rem; margin-bottom: 22px; color: var(--ink); }
-    .gossip-head h2 { font-size: clamp(2.2rem, 4vw, 3.4rem); }
-    .gossip-head p { margin: .55rem 0 0; color: rgba(12,16,37,.72); font-size: 1.12rem; }
-    .gossip-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-    .quip { display: flex; flex-direction: column; min-height: 250px; padding: 22px 22px 18px; border-radius: 26px; color: var(--ink); box-shadow: 0 16px 34px rgba(0,0,0,.24); }
-    .quip-friend { background: #fffdf8; transform: rotate(-1deg); }
-    .quip-wife { background: var(--mint); transform: rotate(.7deg); }
-    .quip-reddit { background: var(--ink); color: white; transform: rotate(-.45deg); }
-    .stars { margin: 0; font-size: 1.05rem; letter-spacing: .14em; line-height: 1; }
-    .stars .dim { opacity: .28; }
-    .quip-line { margin: .9rem 0 0; font-size: clamp(1.25rem, 1.8vw, 1.65rem); font-weight: 900; letter-spacing: -.04em; line-height: 1.18; }
-    .quip-by { margin: auto 0 0; padding-top: 1.1rem; font-size: .75rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
-    .quip-reddit .quip-by { color: #e24a1b; }
-    .finale { color: white; background: linear-gradient(135deg, var(--blue), #4936ca 58%, #231965); }
-    .finale .eyebrow { color: var(--yellow); }
-    .finale .eyebrow::before { border-color: white; background: var(--coral); }
-    .finale .btn.secondary { background: white; }
-    .finale-stores { justify-content: center; margin-top: 0; }
-    footer { color: rgba(255,255,255,.78); background: #080b1b; border-top: 0; }
-    .demo-rail { border: 0; background: var(--coral); color: white; box-shadow: -6px 7px 0 var(--ink); }
-    .demo-drawer { color: white; background: #0a0d20; border-left: 1px solid rgba(255,255,255,.15); }
-    .drawer-head small { color: var(--mint); }
-    .drawer-close { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: white; }
-    .demo-drawer .arcade { border-color: rgba(255,255,255,.16); box-shadow: 9px 10px 0 var(--coral); }
-    .footer-links { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: .4rem 1.1rem; }
-    .footer-links a { text-decoration: none; }
-    .footer-links a:hover, .footer-links a:focus-visible { color: var(--yellow); text-decoration: underline; text-underline-offset: 4px; }
-    .reveal-ready .reveal { opacity: 0; translate: 0 26px; transition: opacity .6s ease, translate .6s cubic-bezier(.2,.8,.2,1), transform .2s ease; }
-    .reveal-ready .reveal.is-in { opacity: 1; translate: 0 0; }
-    @media (prefers-reduced-motion: reduce) {
-      .reveal-ready .reveal { opacity: 1; translate: none; }
-      .hero-copy > *, .hero-showcase { animation: none !important; }
-    }
-    @media (max-width: 900px) {
-      .hero { min-height: auto; padding-block: 74px 92px; }
-      .hero h1 { max-width: 9ch; }
-      .hero-showcase { margin-top: 34px; }
-      .process-story { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); }
-      .games-showcase .section-head { grid-template-columns: 1fr; }
-      .games-showcase .section-head p { justify-self: start; }
-      .game-card:first-child, .game-card:last-child { transform: none; }
-      .workshop-wall, .prototype-row, .gossip-grid { grid-template-columns: 1fr; }
-      .desk-hero, .desk-rule, .proto, .quip { min-height: 0; transform: none; }
-    }
-    @media (max-width: 620px) {
-      header { padding: 6px 0 0; }
-      nav { flex-wrap: wrap; row-gap: 2px; }
-      .nav-actions { display: contents; }
-      .language-switch { margin-left: auto; }
-      .brand-logo { width: 68px; height: 50px; }
-      .nav-links { order: 3; width: calc(100% + 22px); margin: 0 -11px; padding: 4px 11px 8px; gap: .3rem; overflow-x: auto; scrollbar-width: none; }
-      .nav-links::-webkit-scrollbar { display: none; }
-      .nav-links a, .nav-links a:not(:last-child) { display: inline-flex; flex: none; padding: .32rem .7rem; border: 1px solid rgba(255,255,255,.16); font-size: .84rem; }
-      .nav-links a:last-child { border-color: var(--yellow); color: var(--yellow); }
-      .footer-links { width: 100%; }
-      .language-switch { padding: 2px; }
-      .lang-btn { min-width: 34px; min-height: 32px; padding-inline: .42rem; }
-      .hero { padding-block: 58px 78px; }
-      .hero h1 { font-size: clamp(3.75rem, 17vw, 5.4rem); }
-      .hero .lead { color: rgba(255,255,255,.8); }
-      .hero-showcase { animation: none; }
-      .hero-showcase::before { inset: -10px 18px 12px -8px; }
-      .hero-showcase img { box-shadow: 10px 11px 0 var(--coral), -6px -6px 0 rgba(116,92,255,.58); }
-      .hero-badge { right: 4px; bottom: -22px; }
-      .games-showcase { padding-block: 96px 76px; }
-      .game-card { min-height: 0; border-radius: 30px; }
-      .game-card-copy { padding: 25px; }
-      .game-card .btn.secondary { margin: .65rem 0 0; }
-      #surec { margin-top: 0; border-radius: 34px 34px 0 0; }
-      .process-story { grid-template-columns: 1fr; margin-bottom: 44px; }
-      .process-gallery { width: min(100%, 540px); margin-inline: auto; gap: 8px; }
-      .process-gallery::before { inset: 10px -8px -10px 8px; }
-      .story-shot { border-radius: 19px; }
-      .process-story-copy { padding-top: 20px; }
-      .shipaton-banner { margin-top: 52px; border-radius: 24px; box-shadow: 8px 9px 0 rgba(12,16,37,.16); }
-      .shipaton-banner figcaption { position: static; border-radius: 0; text-align: center; }
-    }
-    @media (max-width: 390px) {
-      .official-store-link .google-badge { height: 61px; }
-      .official-store-link .apple-badge { height: 50px; }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css?v=arcade3">
 </head>
 <body>
   <a class="skip" href="#indir" data-tr="İndirme bağlantılarına geç" data-en="Skip to download links">İndirme bağlantılarına geç</a>
@@ -460,35 +70,56 @@
 
   <button class="drawer-backdrop" id="drawerBackdrop" aria-label="Web demo panelini kapat" data-aria-tr="Web demo panelini kapat" data-aria-en="Close web demo panel" tabindex="-1"></button>
   <button class="demo-rail" id="demoRail" aria-controls="demoDrawer" aria-expanded="false">WEB DEMO</button>
-  <aside class="demo-drawer" id="demoDrawer" aria-hidden="true" aria-label="Web demo paneli" data-aria-tr="Web demo paneli" data-aria-en="Web demo panel">
+  <aside class="demo-drawer" id="demoDrawer" role="dialog" aria-modal="true" aria-hidden="true" inert aria-label="Firu Arcade">
     <div class="drawer-head">
-      <div><small data-tr="TARAYICIDA DENE" data-en="TRY IT IN YOUR BROWSER">TARAYICIDA DENE</small><strong data-tr="Uygulamadaki fizikle mini demo" data-en="A mini demo with the app’s physics">Uygulamadaki fizikle mini demo</strong></div>
-      <button class="drawer-close" id="demoClose" aria-label="Web demo panelini kapat" data-aria-tr="Web demo panelini kapat" data-aria-en="Close web demo panel">×</button>
+      <div><small>FIRU FIRU GAMES · WEB DEMO</small><strong data-tr="Bir tur daha?" data-en="One more run?">Bir tur daha?</strong></div>
+      <button class="drawer-close" id="demoClose" aria-label="Kapat" data-aria-tr="Kapat" data-aria-en="Close">×</button>
     </div>
-    <div class="arcade" id="oyna" aria-label="Firu Firu mini oyun konsolu" data-aria-tr="Firu Firu mini oyun konsolu" data-aria-en="Firu Firu mini game console">
-      <div class="arcade-top">
-        <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
-        <div class="scoreline" id="scoreline">SKOR 000 · EN İYİ 000</div>
-      </div>
-      <div class="game-tabs" role="tablist" aria-label="Oyun seç" data-aria-tr="Oyun seç" data-aria-en="Choose a game">
-        <button class="game-tab" id="jump-tab" role="tab" aria-selected="true" aria-controls="game-screen" data-game="jump">Paw Jump</button>
-        <button class="game-tab" id="pop-tab" role="tab" aria-selected="false" aria-controls="game-screen" data-game="pop">Bubble Paws</button>
-      </div>
-      <div class="screen" id="game-screen" role="tabpanel" aria-labelledby="jump-tab">
-        <canvas id="gameCanvas" width="640" height="480" aria-label="Oynanabilir mini oyun alanı" data-aria-tr="Oynanabilir mini oyun alanı" data-aria-en="Playable mini game area"></canvas>
-        <div class="game-overlay" id="overlay">
-          <div class="overlay-card">
-            <strong id="overlayTitle">Paw Jump</strong>
-            <p id="overlayText">Sol ya da sağa basılı tut. Firu düşünce kendiliğinden seker.</p>
-            <button class="btn" id="startGame">Oyunu başlat</button>
+    <div class="demo-layout">
+      <div class="arcade" id="oyna">
+        <div class="game-tabs" role="tablist" aria-label="Oyun seç" data-aria-tr="Oyun seç" data-aria-en="Choose a game">
+          <button class="game-tab" id="jump-tab" role="tab" aria-selected="true" aria-controls="game-screen" data-game="jump">Paw Jump</button>
+          <button class="game-tab" id="pop-tab" role="tab" aria-selected="false" aria-controls="game-screen" data-game="pop">Bubble Paws</button>
+        </div>
+        <div class="arcade-top">
+          <div class="scoreline" id="scoreline">SKOR 000 · REKOR 000</div>
+          <div class="game-tools">
+            <button class="tool-button" id="pauseBtn" aria-label="Duraklat" title="P">Ⅱ</button>
+            <button class="tool-button" id="soundBtn" aria-pressed="false" aria-label="Sesi kapat">♪</button>
           </div>
         </div>
+        <div class="game-stage" id="gameStage">
+          <p class="rotate-hint" data-tr="Daha geniş bir oyun alanı için telefonunu yatay çevir." data-en="Turn your phone sideways for a bigger playground.">Daha geniş bir oyun alanı için telefonunu yatay çevir.</p>
+          <div class="screen jump-mode" id="game-screen" role="tabpanel" aria-labelledby="jump-tab">
+            <canvas id="gameCanvas" width="400" height="700" aria-label="Oyun alanı" data-aria-tr="Oyun alanı" data-aria-en="Game area"></canvas>
+            <div class="game-overlay" id="overlay">
+              <div class="overlay-card">
+                <span class="overlay-kicker" id="overlayKicker">SONSUZ TIRMANIŞ</span>
+                <strong id="overlayTitle">Paw Jump</strong>
+                <p id="overlayText">Platformlara yönlen, kemikleri topla, gökyüzüne ulaş.</p>
+                <button class="btn" id="startGame">Oyunu başlat</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="game-controls" aria-label="Oyun kontrolleri" data-aria-tr="Oyun kontrolleri" data-aria-en="Game controls">
+          <button class="control" id="leftBtn" aria-label="Sola git" data-aria-tr="Sola git" data-aria-en="Move left">← SOL</button>
+          <button class="control" id="actionBtn" aria-label="Oyun aksiyonu" data-aria-tr="Oyun aksiyonu" data-aria-en="Game action">ÇİFT ZIPLA</button>
+          <button class="control" id="rightBtn" aria-label="Sağa git" data-aria-tr="Sağa git" data-aria-en="Move right">SAĞ →</button>
+          <button class="control center" id="restartBtn" aria-label="Yeniden başlat" data-aria-tr="Yeniden başlat" data-aria-en="Restart">↻</button>
+        </div>
       </div>
-      <div class="game-controls" aria-label="Oyun kontrolleri" data-aria-tr="Oyun kontrolleri" data-aria-en="Game controls">
-        <button class="control" id="leftBtn" aria-label="Sola git" data-aria-tr="Sola git" data-aria-en="Move left">← SOL</button>
-        <button class="control" id="actionBtn" aria-label="Oyun aksiyonu" data-aria-tr="Oyun aksiyonu" data-aria-en="Game action">ÇİFT ZIPLA</button>
-        <button class="control" id="rightBtn" aria-label="Sağa git" data-aria-tr="Sağa git" data-aria-en="Move right">SAĞ →</button>
-        <button class="control center" id="restartBtn" aria-label="Oyunu yeniden başlat" data-aria-tr="Oyunu yeniden başlat" data-aria-en="Restart game">↻</button>
+      <div class="demo-guide">
+        <img id="guideArt" class="guide-art" src="assets/paw_jump_keyart.jpg" alt="Paw Jump">
+        <h3 id="guideTitle">Paw Jump</h3>
+        <p id="guideDescription"></p>
+        <div class="demo-progress" id="demoProgress" hidden><span></span><span></span><span></span></div>
+        <p class="guide-label" data-tr="KONTROLLER" data-en="CONTROLS">KONTROLLER</p>
+        <div class="guide-control"><kbd>← → / A D</kbd><span data-tr="Hareket et" data-en="Move">Hareket et</span></div>
+        <div class="guide-control"><kbd>SPACE</kbd><span id="guideAction">Çift zıpla</span></div>
+        <div class="guide-control"><kbd>P / ESC</kbd><span data-tr="Duraklat" data-en="Pause">Duraklat</span></div>
+        <p class="guide-tip" id="guideTip"></p>
+        <a class="guide-download" id="demoDownload" href="#indir" data-tr="Tam macerayı cebine indir →" data-en="Get the full adventure on mobile →">Tam macerayı cebine indir →</a>
       </div>
     </div>
   </aside>
@@ -499,7 +130,7 @@
       <div class="hero-copy">
         <p class="eyebrow" data-tr="İki oyun · Tek pati dünyası" data-en="Two games · One paw universe">İki oyun · Tek pati dünyası</p>
         <h1 id="hero-title"><span data-tr="Firu’nun dünyası" data-en="Firu’s world">Firu’nun dünyası</span> <span class="pop" data-tr="cebinde." data-en="in your pocket.">cebinde.</span></h1>
-        <p class="lead" data-tr="Gerçek bir Cocker Spaniel’den doğan arcade macerası. Paw Jump’ta gökyüzüne tırman, Bubble Paws’ta 50 bölümlük balon kaosunu temizle; tüm ilerlemeni aynı uygulamada büyüt." data-en="An arcade adventure inspired by a real Cocker Spaniel. Climb the skies in Paw Jump, clear 50 levels of bubble chaos in Bubble Paws, and grow all your progress in one app.">Gerçek bir Cocker Spaniel’den doğan arcade macerası. Paw Jump’ta gökyüzüne tırman, Bubble Paws’ta 50 bölümlük balon kaosunu temizle; tüm ilerlemeni aynı uygulamada büyüt.</p>
+        <p class="lead" data-tr="Bir gerçek köpek. İki kocaman macera. Gökyüzüne sıçra, balonları patlat ve Firu’nun dünyasını cebine taşı." data-en="One real dog. Two big adventures. Jump into the sky, pop every bubble, and take Firu’s world wherever you go.">Bir gerçek köpek. İki kocaman macera. Gökyüzüne sıçra, balonları patlat ve Firu’nun dünyasını cebine taşı.</p>
         <div class="store-actions" id="indir" aria-label="Firu Firu Games indirme bağlantıları" data-aria-tr="Firu Firu Games indirme bağlantıları" data-aria-en="Firu Firu Games download links">
           <a class="official-store-link" href="https://play.google.com/store/apps/details?id=com.firufirugames.app" target="_blank" rel="noopener noreferrer" aria-label="Firu Firu Games'i Google Play'den indir" data-aria-tr="Firu Firu Games'i Google Play'den indir" data-aria-en="Download Firu Firu Games from Google Play">
             <img class="store-badge google-badge badge-tr" src="assets/google-play-tr.png" alt="">
@@ -519,9 +150,12 @@
     </div>
     </section>
 
-    <div class="ticker" aria-hidden="true">
-      <div class="ticker-track"><span>Paw Jump</span><span>Bubble Paws</span><span data-tr="50 bölüm" data-en="50 levels">50 bölüm</span><span data-tr="Ortak ilerleme" data-en="Shared progress">Ortak ilerleme</span><span data-tr="Ücretsiz indir" data-en="Download free">Ücretsiz indir</span><span>Paw Jump</span><span>Bubble Paws</span><span data-tr="50 bölüm" data-en="50 levels">50 bölüm</span><span data-tr="Ortak ilerleme" data-en="Shared progress">Ortak ilerleme</span><span data-tr="Ücretsiz indir" data-en="Download free">Ücretsiz indir</span></div>
-    </div>
+    <div class="ticker"><div class="ticker-track">
+      <span><b>02</b> <span data-tr="Oyun, tek dünya" data-en="Games, one world">Oyun, tek dünya</span></span>
+      <span><b>50</b> <span data-tr="Bubble Paws bölümü" data-en="Bubble Paws levels">Bubble Paws bölümü</span></span>
+      <span><b>∞</b> <span data-tr="Paw Jump macerası" data-en="Paw Jump adventures">Paw Jump macerası</span></span>
+      <span><b>♥</b> <span data-tr="Gerçek Firu’dan ilhamla" data-en="Inspired by the real Firu">Gerçek Firu’dan ilhamla</span></span>
+    </div></div>
 
     <section class="games-showcase" id="oyunlar" aria-labelledby="games-title">
       <div class="shell">
@@ -538,7 +172,7 @@
               <p data-tr="Firu otomatik sıçrar: platformlara yönlen, kemikleri topla, yayları kullan ve doğru anda çift zıpla." data-en="Firu jumps automatically: steer onto platforms, collect bones, use springs, and double-jump at just the right moment.">Firu otomatik sıçrar: platformlara yönlen, kemikleri topla, yayları kullan ve doğru anda çift zıpla.</p>
               <p class="game-features" data-tr="Sonsuz tırmanış · Roket ve kalkan · Günlük görevler" data-en="Endless climb · Rocket and shield · Daily missions">Sonsuz tırmanış · Roket ve kalkan · Günlük görevler</p>
               <a class="btn" href="#indir" data-tr="Uygulamayı indir" data-en="Download the app">Uygulamayı indir</a>
-              <button class="btn secondary" data-play="jump" data-tr="Küçük demoyu aç" data-en="Open mini demo">Küçük demoyu aç</button>
+              <button class="btn secondary" data-play="jump" data-tr="Tarayıcıda oyna" data-en="Play in browser">Tarayıcıda oyna</button>
             </div>
           </article>
           <article class="game-card">
@@ -549,7 +183,7 @@
               <p data-tr="Firu’yu hareket ettir, zıpkını ateşle ve büyük balonları iki küçük parçaya bölerek alanı temizle." data-en="Move Firu, fire the harpoon, and split large bubbles into smaller pieces until the arena is clear.">Firu’yu hareket ettir, zıpkını ateşle ve büyük balonları iki küçük parçaya bölerek alanı temizle.</p>
               <p class="game-features" data-tr="50 bölüm · Boss savaşları · Kombo puanı" data-en="50 levels · Boss fights · Combo scoring">50 bölüm · Boss savaşları · Kombo puanı</p>
               <a class="btn" href="#indir" data-tr="Uygulamayı indir" data-en="Download the app">Uygulamayı indir</a>
-              <button class="btn secondary" data-play="pop" data-tr="Küçük demoyu aç" data-en="Open mini demo">Küçük demoyu aç</button>
+              <button class="btn secondary" data-play="pop" data-tr="Tarayıcıda oyna" data-en="Play in browser">Tarayıcıda oyna</button>
             </div>
           </article>
         </div>
@@ -711,6 +345,6 @@
     })();
   </script>
   <script src="site-language.js?v=20260923b"></script>
-  <script src="game-demo.js?v=20260923b"></script>
+  <script src="game-demo.js?v=arcade3"></script>
 </body>
 </html>

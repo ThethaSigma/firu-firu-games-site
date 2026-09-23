@@ -19,6 +19,16 @@
   const demoClose = document.getElementById('demoClose');
   const drawerBackdrop = document.getElementById('drawerBackdrop');
   const openDemo = document.getElementById('openDemo');
+  const stage = document.getElementById('gameStage');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const soundBtn = document.getElementById('soundBtn');
+  const overlayKicker = document.getElementById('overlayKicker');
+  const guideTitle = document.getElementById('guideTitle');
+  const guideArt = document.getElementById('guideArt');
+  const guideDescription = document.getElementById('guideDescription');
+  const guideTip = document.getElementById('guideTip');
+  const guideAction = document.getElementById('guideAction');
+  const progress = document.getElementById('demoProgress');
 
   const image = (src) => Object.assign(new Image(), { src });
   const art = {
@@ -35,7 +45,9 @@
     bubbleBg: image('assets/bubble_paws_bg.webp'),
     bubbleIdle: image('assets/bubble_paws_firu.webp'),
     bubbleShoot: image('assets/bubble_paws_shoot.png'),
-    harpoon: image('assets/harpoon.webp')
+    harpoon: image('assets/harpoon.webp'),
+    bubbleWalk: image('assets/bubble_walk.png'),
+    woodBubble: image('assets/bubble_wood.webp')
   };
 
   const audioSources = {
@@ -57,9 +69,20 @@
 
   const uiCopy = {
     tr: {
-      score: 'SKOR', best: 'EN İYİ', start: 'Oyunu başlat', retry: 'Tekrar dene', oneMore: 'Bir tur daha',
+      score: 'SKOR', best: 'REKOR', start: 'Oyunu başlat', retry: 'Tekrar dene', oneMore: 'Bir tur daha',
       left: '← SOL', right: 'SAĞ →', doubleJump: 'ÇİFT ZIPLA', fire: 'ATEŞ', seconds: 'sn', combo: 'KOMBO',
-      bubbles: 'BALON', level: 'BÖLÜM 1', timeUpTitle: 'Süre doldu',
+      bubbles: 'BALON', level: 'BÖLÜM', timeUpTitle: 'Süre doldu',
+      pause: 'Duraklat', resume: 'Devam et', paused: 'Küçük bir mola.',
+      pauseText: 'Hazır olduğunda kaldığın yerden devam et.',
+      mute: 'Sesi kapat', unmute: 'Sesi aç', next: 'Sonraki bölüm',
+      complete: 'Üç bölüm, kocaman bir alkış!',
+      completeText: points => `Demo tamamlandı. ${points} puan! 50 bölümün tamamı mobil uygulamada seni bekliyor.`,
+      jumpKicker: 'SONSUZ TIRMANIŞ', popKicker: '3 BÖLÜMLÜK MACERA',
+      jumpTip: 'Yaylar seni daha yükseğe taşır. Mor güç simgesi havada bir zıplama daha kazandırır.',
+      popTip: 'ATEŞ tuşunu basılı tutarak art arda ateş edebilirsin. Ahşap balonlar iki isabet ister.',
+      jumpGuide: 'Her iniş yeni bir başlangıç. Kemikleri topla, hareketli platformları takip et ve rekorunu yükselt.',
+      popGuide: 'Üç farklı bölüm: balonları parçala, engellerin etrafından dolaş, ahşap balonları kır.',
+      goodJump: 'TEMİZ İNİŞ!', rescue: 'BİR ŞANS DAHA',
       jumpIntro: 'Sol ya da sağa basılı tut. Firu düşünce kendiliğinden seker. Çift zıplama ikonu alınca, düşerken de çalışır. Çatlak platform tutmaz.',
       bubbleIntro: 'Sol ya da sağa basılı tut. ATEŞ zıpkını dümdüz yukarı yollar. Büyük balon ikiye bölünür; en küçük parça yok olur.',
       jumpEndTitle: 'Paw Jump turu bitti',
@@ -73,7 +96,18 @@
     en: {
       score: 'SCORE', best: 'BEST', start: 'Start game', retry: 'Try again', oneMore: 'One more run',
       left: '← LEFT', right: 'RIGHT →', doubleJump: 'DOUBLE JUMP', fire: 'FIRE', seconds: 's', combo: 'COMBO',
-      bubbles: 'BUBBLES', level: 'LEVEL 1', timeUpTitle: 'Time up',
+      bubbles: 'BUBBLES', level: 'LEVEL', timeUpTitle: 'Time up',
+      pause: 'Pause', resume: 'Resume', paused: 'Take a breath.',
+      pauseText: 'Your adventure will be right here when you are ready.',
+      mute: 'Mute sound', unmute: 'Enable sound', next: 'Next level',
+      complete: 'Three levels. Well played!',
+      completeText: points => `Demo complete. ${points} points! All 50 levels are waiting in the mobile app.`,
+      jumpKicker: 'ENDLESS CLIMB', popKicker: 'A THREE-LEVEL ADVENTURE',
+      jumpTip: 'Springs send you higher. The purple power-up gives you one extra jump in mid-air.',
+      popTip: 'Hold FIRE to keep shooting. Wooden bubbles take two hits.',
+      jumpGuide: 'Every landing is a new beginning. Collect bones, follow moving platforms, and beat your best.',
+      popGuide: 'Three different levels: split bubbles, move around obstacles, and break wooden bubbles.',
+      goodJump: 'PERFECT LANDING!', rescue: 'ONE MORE CHANCE',
       jumpIntro: 'Hold left or right. Firu bounces on landing. Double jump works even while falling, once you collect the icon. Cracked platforms do not hold.',
       bubbleIntro: 'Hold left or right. FIRE sends the harpoon straight up. A large bubble splits in two until the smallest piece pops.',
       jumpEndTitle: 'Paw Jump run over',
@@ -87,8 +121,9 @@
   };
 
   const copy = () => uiCopy[document.documentElement.lang === 'en' ? 'en' : 'tr'];
-  const width = () => canvas.clientWidth;
-  const height = () => canvas.clientHeight;
+  // Keep simulation coordinates independent of viewport and device-pixel ratio.
+  const width = () => game === 'jump' ? 400 : 680;
+  const height = () => game === 'jump' ? 700 : 400;
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const overlaps = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
   const FIXED_STEP = 1 / 60;
@@ -99,6 +134,15 @@
   let lastFrame = 0;
   let accumulator = 0;
   let score = 0;
+  let paused = false;
+  let overlayMode = 'intro';
+  let bubbleLevel = 0;
+  let returnFocus = null;
+  let muted = false;
+  try { muted = localStorage.getItem('firu-demo-muted') === 'true'; } catch (_) {}
+  let heldFire = false;
+  const bestScores = {};
+  const trimCache = new WeakMap();
   let keys = { left: false, right: false, screenLeft: false, screenRight: false };
 
   function steer() {
@@ -115,7 +159,7 @@
 
   function playSfx(name, volume = .18, playbackRate = 1) {
     const source = audioBank[name];
-    if (!source) return;
+    if (!source || muted) return;
     const sound = source.cloneNode();
     sound.volume = volume;
     sound.playbackRate = playbackRate;
@@ -127,13 +171,51 @@
   }
 
   function resizeCanvas() {
-    const rect = canvas.getBoundingClientRect();
+    const availableW = stage.clientWidth || 400;
+    const availableH = stage.clientHeight || 600;
+    const scale = Math.max(.1, Math.min(availableW / width(), availableH / height()));
+    const cssW = Math.floor(width() * scale), cssH = Math.floor(height() * scale);
+    screen.style.width = cssW + 'px';
+    screen.style.height = cssH + 'px';
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.max(1, Math.round(rect.width * ratio));
-    canvas.height = Math.max(1, Math.round(rect.height * ratio));
-    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    canvas.width = Math.max(1, Math.round(cssW * ratio));
+    canvas.height = Math.max(1, Math.round(cssH * ratio));
+    ctx.setTransform(canvas.width / width(), 0, 0, canvas.height / height(), 0, 0);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
+    draw();
+  }
+
+  function drawCharacter(img, x, y, w, h, flip = false, alpha = 1, frame = null) {
+    if (!img.complete || !img.naturalWidth) return;
+    const frames = img === art.bubbleWalk ? 6 : 1;
+    let rects = trimCache.get(img);
+    if (!rects) {
+      const scan = document.createElement('canvas'), frameW = img.naturalWidth / frames;
+      scan.width = img.naturalWidth; scan.height = img.naturalHeight;
+      const sc = scan.getContext('2d', { willReadFrequently: true });
+      sc.drawImage(img, 0, 0);
+      const data = sc.getImageData(0, 0, scan.width, scan.height).data;
+      rects = [];
+      for (let f = 0; f < frames; f++) {
+        let minX = frameW, minY = scan.height, maxX = 0, maxY = 0;
+        for (let py = 0; py < scan.height; py++) for (let px = 0; px < frameW; px++) {
+          if (data[(py * scan.width + px + f * frameW) * 4 + 3] < 30) continue;
+          minX = Math.min(minX, px); minY = Math.min(minY, py);
+          maxX = Math.max(maxX, px); maxY = Math.max(maxY, py);
+        }
+        rects.push({ x: f * frameW + minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 });
+      }
+      trimCache.set(img, rects);
+    }
+    const crop = rects[frame === null ? 0 : frame % frames];
+    if (crop.w <= 0 || crop.h <= 0) return;
+    const scale = Math.min(w / crop.w, h / crop.h), dw = crop.w * scale, dh = crop.h * scale;
+    ctx.save(); ctx.globalAlpha *= alpha;
+    ctx.translate(x + w / 2, y + h);
+    if (flip) ctx.scale(-1, 1);
+    ctx.drawImage(img, crop.x, crop.y, crop.w, crop.h, -dw / 2, -dh, dw, dh);
+    ctx.restore();
   }
 
   function drawCover(img, x, y, w, h) {
@@ -165,13 +247,21 @@
     overlayText.textContent = text;
     startButton.textContent = button;
     overlay.hidden = false;
+    pauseBtn.disabled = !running && !paused;
+    overlayKicker.textContent = game === 'jump' ? copy().jumpKicker : `${copy().level} ${bubbleLevel + 1} / 3`;
   }
 
   function updateScoreline(extra = '') {
-    const storedBest = Number(localStorage.getItem(bestKey()) || 0);
-    const best = Math.max(storedBest, score);
-    if (best !== storedBest) localStorage.setItem(bestKey(), String(best));
-    scoreline.textContent = `${copy().score} ${String(score).padStart(3, '0')} · ${copy().best} ${String(best).padStart(3, '0')}${extra}`;
+    const key = bestKey();
+    if (!(key in bestScores)) {
+      try { bestScores[key] = Number(localStorage.getItem(key)) || 0; } catch (_) { bestScores[key] = 0; }
+    }
+    if (score > bestScores[key]) {
+      bestScores[key] = score;
+      try { localStorage.setItem(key, String(score)); } catch (_) {}
+    }
+    const text = `${copy().score} ${String(score).padStart(3, '0')} · ${copy().best} ${String(bestScores[key]).padStart(3, '0')}${extra}`;
+    if (scoreline.textContent !== text) scoreline.textContent = text;
   }
 
   function drawHudPill(text, x, y, color = '#11162e') {
@@ -239,8 +329,8 @@
     const scale = jumpScale();
     return {
       x, y, originX: x, w, h: 30 * scale, type, variant,
-      phase: Math.random() * Math.PI * 2,
-      range: 90 * scale,
+      phase: 0,
+      range: 70 * scale,
       landedPulse: 0
     };
   }
@@ -248,9 +338,9 @@
   function addJumpItem(platform) {
     const roll = Math.random();
     if (roll < .10) {
-      jumpState.items.push({ type: 'air', x: platform.x + platform.w / 2 - 18 * jumpScale(), y: platform.y - 45 * jumpScale(), w: 36 * jumpScale(), h: 36 * jumpScale(), phase: Math.random() * 6 });
+      jumpState.items.push({ type: 'air', platform, x: platform.x + platform.w / 2 - 18 * jumpScale(), y: platform.y - 45 * jumpScale(), w: 36 * jumpScale(), h: 36 * jumpScale(), phase: Math.random() * 6 });
     } else if (roll < .43) {
-      jumpState.items.push({ type: 'bone', x: platform.x + platform.w / 2 - 12 * jumpScale(), y: platform.y - 31 * jumpScale(), w: 24 * jumpScale(), h: 24 * jumpScale(), phase: Math.random() * 6 });
+      jumpState.items.push({ type: 'bone', platform, x: platform.x + platform.w / 2 - 12 * jumpScale(), y: platform.y - 31 * jumpScale(), w: 24 * jumpScale(), h: 24 * jumpScale(), phase: Math.random() * 6 });
     }
   }
 
@@ -258,25 +348,29 @@
     const s = jumpState;
     if (!s.platforms.length) return;
     const scale = jumpScale();
-    const top = s.platforms.reduce((a, b) => a.y < b.y ? a : b);
+    const safe = s.platforms.filter(p => p.type !== 'fake');
+    const top = (safe.length ? safe : s.platforms).reduce((a, b) => a.y < b.y ? a : b);
     const metres = s.altitude / (12 * scale);
     const gap = clamp(70 + metres / 80, 70, 112) * scale * (.96 + Math.random() * .08);
     const platformWidth = (56 + Math.random() * 34) * scale;
-    const reach = 243 * scale;
+    const reach = (metres < 40 ? 125 : 180) * scale;
     const x = clamp(top.x + (Math.random() * 2 - 1) * reach, 8, width() - platformWidth - 8);
     const roll = Math.random();
     const springChance = metres > 20 ? .12 : .06;
     const movingChance = metres > 75 ? .15 : 0;
-    const fakeChance = metres > 110 ? .12 : 0;
     let type = 'normal';
     if (roll < springChance) type = 'spring';
     else if (roll < springChance + movingChance) type = 'moving';
-    else if (roll < springChance + movingChance + fakeChance) type = 'fake';
+    // Fragile platforms are optional decoys; the mandatory route stays solid.
     const variant = type === 'fake' || metres > 160 ? 'stone' : Math.random() < .68 ? 'grass' : 'default';
     const platform = makePlatform(x, top.y - gap, platformWidth, type, variant);
     if (type === 'moving') platform.range = 90 * scale;
     s.platforms.push(platform);
-    if (type !== 'fake') addJumpItem(platform);
+    addJumpItem(platform);
+    if (roll > .75 && metres > 110) {
+      const decoyX = x < width() / 2 ? width() - platformWidth - 18 : 18;
+      if (Math.abs(decoyX - x) > platformWidth + 15) s.platforms.push(makePlatform(decoyX, platform.y + 25, platformWidth, 'fake', 'stone'));
+    }
   }
 
   function initJump() {
@@ -286,10 +380,10 @@
     score = 0;
     const platforms = [
       makePlatform(w * .38, h - 38 * scale, 90 * scale),
-      makePlatform(w * .07, h - 145 * scale, 78 * scale),
-      makePlatform(w * .62, h - 240 * scale, 74 * scale, 'spring'),
-      makePlatform(w * .30, h - 332 * scale, 70 * scale),
-      makePlatform(w * .68, h - 420 * scale, 66 * scale)
+      makePlatform(w * .23, h - 130 * scale, 88 * scale),
+      makePlatform(w * .46, h - 224 * scale, 82 * scale),
+      makePlatform(w * .23, h - 315 * scale, 78 * scale, 'spring'),
+      makePlatform(w * .52, h - 410 * scale, 74 * scale)
     ];
     jumpState = {
       player: {
@@ -300,9 +394,13 @@
       },
       platforms,
       items: [], particles: [], altitude: 0, bones: 0, landings: 0,
-      bonusScore: 0, lives: 3, doubleJumps: 0, combo: 0, shake: 0, elapsed: 0
+      bonusScore: 0, lives: 3, doubleJumps: 0, combo: 0, shake: 0, elapsed: 0, toast: '', toastTime: 0, trail: []
     };
     platforms.slice(1).forEach(addJumpItem);
+    const first = platforms[1];
+    jumpState.items = jumpState.items.filter(item => item.platform !== first);
+    jumpState.items.push({ type: 'air', platform: first, x: first.x + first.w / 2 - 18, y: first.y - 45, w: 36, h: 36, phase: 0 });
+    while (jumpState.platforms.reduce((min, p) => Math.min(min, p.y), h) > -110) generateJumpPlatform();
     syncJumpAction();
     updateScoreline(' · 0 m');
     drawJump();
@@ -325,13 +423,16 @@
     const s = jumpState;
     s.lives -= 1;
     s.shake = 10;
+    playSfx('hit', .2);
+    s.toast = copy().rescue; s.toastTime = 1.8;
     if (s.lives <= 0) {
       running = false;
+      overlayMode = 'jumpEnd';
       setOverlay(copy().jumpEndTitle, copy().jumpEnd(Math.floor(s.altitude / (12 * jumpScale())), s.bones), copy().retry);
       return;
     }
     const landing = s.platforms
-      .filter(platform => platform.y > height() * .48 && platform.y < height() - 8)
+      .filter(platform => platform.type !== 'fake' && platform.y > height() * .48 && platform.y < height() - 65)
       .sort((a, b) => b.y - a.y)[0] || s.platforms[0];
     s.player.x = landing.x + landing.w / 2 - s.player.w / 2;
     s.player.y = landing.y - s.player.h - 3;
@@ -361,6 +462,10 @@
     p.squash += (0 - p.squash) * Math.min(1, dt * 10);
     p.rotation += ((p.vx / (260 * scale)) * .105 - p.rotation) * Math.min(1, dt * 12);
     s.elapsed += dt;
+    s.toastTime = Math.max(0, s.toastTime - dt);
+    if (p.vy < -600) s.trail.push({ x: p.x + p.w / 2, y: p.y + p.h * .85, life: .25 });
+    s.trail.forEach(point => { point.life -= dt; });
+    s.trail = s.trail.filter(point => point.life > 0).slice(-18);
     s.shake = Math.max(0, s.shake - dt * 34);
 
     if (p.x + p.w < 0) p.x = width();
@@ -388,6 +493,7 @@
         s.landings += 1;
         const centered = Math.abs((p.x + p.w / 2) - (platform.x + platform.w / 2)) < platform.w * .22;
         s.combo = centered ? Math.min(15, s.combo + 1) : 0;
+        if (s.combo >= 3) { s.toast = copy().goodJump; s.toastTime = .7; }
         const multiplier = 1 + Math.min(3, Math.floor(s.combo / 5)) * .5;
         s.bonusScore += Math.round(10 * multiplier);
         spawnParticles(s.particles, p.x + p.w / 2, platform.y, ['#f8df7b', '#ffffff', '#76e4a3'], platform.type === 'spring' ? 12 : 7, 70 * scale);
@@ -401,6 +507,7 @@
     for (let i = s.items.length - 1; i >= 0; i -= 1) {
       const item = s.items[i];
       item.phase += dt * 2.4;
+      if (item.platform) item.x = item.platform.x + item.platform.w / 2 - item.w / 2;
       const pickup = { x: item.x + item.w * .15, y: item.y + item.h * .15, w: item.w * .7, h: item.h * .7 };
       const playerPickup = { x: p.x + p.w * .25, y: p.y + p.h * .2, w: p.w * .5, h: p.h * .68 };
       if (overlaps(playerPickup, pickup)) {
@@ -411,6 +518,7 @@
           playSfx('bone', .18);
         } else {
           s.doubleJumps = Math.min(3, s.doubleJumps + 1);
+          s.toast = copy().doubleJump + ' +1'; s.toastTime = 1.4;
           syncJumpAction();
           spawnParticles(s.particles, item.x + item.w / 2, item.y + item.h / 2, ['#78f2ff', '#9c8cff', '#ffffff'], 15, 110 * scale);
           playSfx('doubleJump', .20);
@@ -420,7 +528,7 @@
     }
 
     const metres = s.altitude / (12 * scale);
-    const pressureSpeed = (55 + clamp(metres / 4000, 0, 1) * 155) * scale;
+    const pressureSpeed = (55 + clamp(metres / 4000, 0, 1) * 155) * scale * Math.min(1, s.elapsed / 2);
     let cameraShift = pressureSpeed * dt;
     const followLine = height() * .50;
     if (p.y < followLine) cameraShift += followLine - p.y;
@@ -430,6 +538,7 @@
       s.platforms.forEach(platform => { platform.y += cameraShift; });
       s.items.forEach(item => { item.y += cameraShift; });
       s.particles.forEach(particle => { particle.y += cameraShift; });
+      s.trail.forEach(point => { point.y += cameraShift; });
     }
 
     s.platforms = s.platforms.filter(platform => platform.y < height() + 80 * scale);
@@ -461,7 +570,7 @@
     ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
     ctx.rotate(player.rotation * player.facing);
     ctx.scale(player.facing < 0 ? -scaleX : scaleX, scaleY);
-    if (sprite.complete && sprite.naturalWidth) ctx.drawImage(sprite, -player.w / 2, -player.h / 2, player.w, player.h);
+    if (sprite.complete && sprite.naturalWidth) drawCharacter(sprite, -player.w / 2, -player.h / 2, player.w, player.h);
     else {
       ctx.fillStyle = '#c88945';
       ctx.beginPath();
@@ -520,6 +629,10 @@
       ctx.fill();
       drawSprite(item.type === 'bone' ? art.bone : art.airJump, item.x, item.y + bob, item.w, item.h);
     }
+    for (const point of s.trail) {
+      ctx.fillStyle = `rgba(255,220,135,${point.life * 1.2})`;
+      ctx.beginPath(); ctx.arc(point.x, point.y, 14 * point.life / .25, 0, Math.PI * 2); ctx.fill();
+    }
     drawParticles(s.particles);
     drawJumpPlayer(s.player);
     ctx.restore();
@@ -527,6 +640,10 @@
     let hudX = 10;
     hudX += drawHudPill(`♥ ${s.lives}`, hudX, 10, '#d74755') + 6;
     hudX += drawHudPill(`${Math.floor(s.altitude / (12 * jumpScale()))} m`, hudX, 10, '#174c72') + 6;
+    if (s.toastTime > 0) {
+      ctx.save(); ctx.globalAlpha = Math.min(1, s.toastTime * 2); ctx.font = '900 17px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#193660'; ctx.lineWidth = 4; ctx.strokeText(s.toast, w / 2, 85); ctx.fillText(s.toast, w / 2, 85); ctx.restore();
+    }
+    drawHudPill('◆ ' + s.bones, w - 68, 10, '#8a641f');
     if (s.combo >= 5) drawHudPill(`${copy().combo} ×${1 + Math.floor(s.combo / 5)}`, hudX, 10, '#7d4cc4');
   }
 
@@ -554,25 +671,36 @@
     };
   }
 
-  function initBubblePaws() {
+  // Spawn positions, time limits and the platform match the mobile game's first three levels.
+  const LEVELS = [
+    { time: 58, spawns: [[.32, 0, 1, false]], obstacles: [] },
+    { time: 58, spawns: [[.22, 1, 1, false], [.78, 1, -1, false]], obstacles: [{ x: .38 * 680, y: .5 * 400, w: .24 * 680, h: .035 * 400 }] },
+    { time: 62, spawns: [[.24, 0, 1, false], [.72, 1, -1, true]], obstacles: [] }
+  ];
+
+  function initBubblePaws(keepProgress = false) {
     const w = width();
     const h = height();
     const scale = bubbleScale();
-    score = 0;
+    const previousLives = bubbleState?.lives || 5;
+    if (!keepProgress) score = 0;
+    const level = LEVELS[bubbleLevel];
     bubbleState = {
       player: {
         x: w / 2 - 27 * scale, y: h - (32 + 62) * scale,
         w: 54 * scale, h: 62 * scale,
-        vx: 0, facing: 1, invincible: 0, shootPose: 0
+        vx: 0, facing: 1, invincible: 0, shootPose: 0, walkTime: 0
       },
-      bubbles: [makeBubble(w * .32, 82 * scale, 0, 1, 0)],
-      harpoons: [], particles: [], floats: [], lives: 5, remaining: 58,
+      bubbles: level.spawns.map(([x, stage, dir, wood], i) => Object.assign(makeBubble(w * x, (82 + i * 25) * scale, stage, dir, i), { wood, hp: wood ? 2 : 1 })),
+      obstacles: level.obstacles.map(o => ({ ...o })),
+      harpoons: [], particles: [], floats: [], lives: keepProgress ? previousLives : 5, remaining: level.time,
       shootCooldown: 0, hits: 0, combo: 0, comboTimer: 0,
       grace: 1.6, shake: 0, flash: 0, clearDelay: 0
     };
     actionBtn.textContent = copy().fire;
     actionBtn.style.opacity = '1';
-    updateScoreline(` · 58 ${copy().seconds}`);
+    updateScoreline(` · ${level.time} ${copy().seconds}`);
+    updateGuide();
     drawBubblePaws();
   }
 
@@ -581,7 +709,7 @@
     const s = bubbleState;
     if (s.shootCooldown > 0 || s.harpoons.length >= 1 || s.clearDelay > 0) return;
     const p = s.player;
-    const baseY = p.y + 14 * bubbleScale();
+    const baseY = p.y + 3 * bubbleScale();
     s.harpoons.push({ x: p.x + p.w / 2, topY: baseY - 9 * bubbleScale(), baseY });
     s.shootCooldown = .22;
     p.shootPose = .18;
@@ -595,13 +723,19 @@
   function splitBubble(index) {
     const s = bubbleState;
     const bubble = s.bubbles[index];
+    s.hits += 1;
+    if (bubble.wood && bubble.hp > 1) {
+      bubble.hp -= 1; bubble.impact = 1; s.shake = 3;
+      spawnParticles(s.particles, bubble.x, bubble.y, ['#ca9248', '#ffdf91'], 10, 110);
+      playSfx('popLarge', .18, .75);
+      return;
+    }
     const spec = BUBBLE_SPECS[bubble.stage];
     s.bubbles.splice(index, 1);
-    s.hits += 1;
     s.combo = s.comboTimer > 0 ? s.combo + 1 : 1;
     s.comboTimer = 1.55;
     const multiplier = 1 + Math.min(3, Math.floor((s.combo - 1) / 3)) * .5;
-    const earned = Math.round(spec.score * multiplier);
+    const earned = Math.round((spec.score + (bubble.wood ? 80 : 0)) * multiplier);
     score += earned;
     addFloatingScore(s, bubble.x, bubble.y, `+${earned}`, BUBBLE_COLORS[bubble.colorIndex]);
     spawnParticles(s.particles, bubble.x, bubble.y, [BUBBLE_COLORS[bubble.colorIndex], '#ffffff', '#ffe9a8'], bubble.stage < 2 ? 16 : 10, (bubble.stage < 2 ? 150 : 105) * bubbleScale());
@@ -619,6 +753,8 @@
       left.vx = -childSpeed;
       right.vx = childSpeed;
       left.vy = right.vy = -400 * bubbleScale();
+      left.wood = right.wood = bubble.wood;
+      left.hp = right.hp = bubble.wood ? 2 : 1;
       s.bubbles.push(left, right);
     }
     if (!s.bubbles.length) s.clearDelay = .62;
@@ -641,6 +777,7 @@
     spawnParticles(s.particles, s.player.x + s.player.w / 2, s.player.y + s.player.h / 2, ['#ff5964', '#ffffff'], 18, 130 * bubbleScale());
     if (s.lives <= 0) {
       running = false;
+      overlayMode = 'bubbleEnd';
       setOverlay(copy().bubbleEndTitle, copy().bubbleEnd(s.hits, score), copy().retry);
       return;
     }
@@ -663,7 +800,10 @@
     if (Math.abs(p.vx) > 3) p.facing = Math.sign(p.vx);
     p.invincible = Math.max(0, p.invincible - dt);
     p.shootPose = Math.max(0, p.shootPose - dt);
+    if (Math.abs(p.vx) > 10) p.walkTime += dt;
+    else p.walkTime = 0;
     s.shootCooldown = Math.max(0, s.shootCooldown - dt);
+    if (heldFire) fireHarpoon();
     s.comboTimer = Math.max(0, s.comboTimer - dt);
     if (s.comboTimer <= 0) s.combo = 0;
     s.grace = Math.max(0, s.grace - dt);
@@ -677,6 +817,7 @@
       const spec = BUBBLE_SPECS[bubble.stage];
       bubble.age += dt;
       bubble.impact = Math.max(0, bubble.impact - dt * 4.6);
+      const previousY = bubble.y;
       bubble.vy += 640 * scale * dt;
       bubble.x += bubble.vx * dt;
       bubble.y += bubble.vy * dt;
@@ -686,14 +827,24 @@
       if (bubble.y - bubble.r < ceiling) { bubble.y = ceiling + bubble.r; bubble.vy = Math.abs(bubble.vy); bubble.impact = .42; }
       if (bubble.y + bubble.r >= floor) {
         bubble.y = floor - bubble.r;
-        bubble.vy = -spec.bounce * scale;
+        bubble.vy = -spec.bounce * scale * (bubble.wood ? (bubble.stage === 3 ? 1.12 : .82) : 1);
         bubble.impact = 1;
+      }
+      for (const obstacle of s.obstacles) {
+        if (bubble.x + bubble.r < obstacle.x || bubble.x - bubble.r > obstacle.x + obstacle.w) continue;
+        if (bubble.vy > 0 && previousY + bubble.r <= obstacle.y + 3 && bubble.y + bubble.r >= obstacle.y) {
+          bubble.y = obstacle.y - bubble.r; bubble.vy = -spec.bounce; bubble.impact = .7;
+        } else if (bubble.vy < 0 && previousY - bubble.r >= obstacle.y + obstacle.h - 3 && bubble.y - bubble.r <= obstacle.y + obstacle.h) {
+          bubble.y = obstacle.y + obstacle.h + bubble.r; bubble.vy = Math.abs(bubble.vy);
+        }
       }
     }
 
     for (let h = s.harpoons.length - 1; h >= 0; h -= 1) {
       const harpoon = s.harpoons[h];
       harpoon.topY -= 680 * scale * dt;
+      const blocked = s.obstacles.some(o => harpoon.x >= o.x && harpoon.x <= o.x + o.w && harpoon.baseY > o.y && harpoon.topY <= o.y + o.h);
+      if (blocked) { s.harpoons.splice(h, 1); continue; }
       let hit = -1;
       for (let b = 0; b < s.bubbles.length; b += 1) {
         const bubble = s.bubbles[b];
@@ -711,6 +862,7 @@
     if (s.grace <= 0 && p.invincible <= 0 && s.bubbles.some(bubble => capsuleBubbleHit(bubble, p))) loseBubbleLife();
     if (s.remaining <= 0 && running && s.clearDelay <= 0) {
       running = false;
+      overlayMode = 'timeUp';
       setOverlay(copy().timeUpTitle, copy().timeUp(s.hits, score), copy().retry);
     }
     if (s.clearDelay > 0) {
@@ -718,7 +870,10 @@
       if (s.clearDelay <= 0 && running) {
         running = false;
         playSfx('clear', .22);
-        setOverlay(copy().clearTitle, copy().clear(s.hits, score), copy().oneMore);
+        overlayMode = 'levelClear';
+        heldFire = false;
+        if (bubbleLevel < LEVELS.length - 1) setOverlay(copy().clearTitle, copy().clear(s.hits, score), copy().next);
+        else setOverlay(copy().complete, copy().completeText(score), copy().oneMore);
       }
     }
 
@@ -733,6 +888,13 @@
   }
 
   function drawGlossyBubble(bubble) {
+    if (bubble.wood && art.woodBubble.complete && art.woodBubble.naturalWidth) {
+      drawSprite(art.woodBubble, bubble.x - bubble.r, bubble.y - bubble.r, bubble.r * 2, bubble.r * 2);
+      if (bubble.hp > 1) {
+        ctx.fillStyle = '#ffe398'; ctx.beginPath(); ctx.arc(bubble.x + bubble.r * .3, bubble.y - bubble.r * .3, Math.max(3, bubble.r * .13), 0, Math.PI * 2); ctx.fill();
+      }
+      return;
+    }
     const color = BUBBLE_COLORS[bubble.colorIndex];
     const squashX = 1 + bubble.impact * .11;
     const squashY = 1 - bubble.impact * .09;
@@ -787,6 +949,14 @@
     ctx.lineTo(w, floor);
     ctx.stroke();
 
+    for (const obstacle of s.obstacles) {
+      ctx.fillStyle = '#88603b'; ctx.strokeStyle = '#e1b47b'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h, 4); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#442c22'; ctx.lineWidth = 1;
+      for (let x = obstacle.x + 12; x < obstacle.x + obstacle.w; x += 28) {
+        ctx.beginPath(); ctx.moveTo(x, obstacle.y + 3); ctx.lineTo(x + 16, obstacle.y + obstacle.h - 3); ctx.stroke();
+      }
+    }
     for (const bubble of s.bubbles) drawGlossyBubble(bubble);
     for (const harpoon of s.harpoons) {
       const harpoonHeight = harpoon.baseY - harpoon.topY;
@@ -820,7 +990,8 @@
     ctx.beginPath();
     ctx.ellipse(p.x + p.w / 2, floor + 2, p.w * .36, 4 * bubbleScale(), 0, 0, Math.PI * 2);
     ctx.fill();
-    drawSprite(playerArt, p.x, p.y, p.w, p.h, p.facing < 0, playerAlpha);
+    if (Math.abs(p.vx) > 20 && p.shootPose <= 0) drawCharacter(art.bubbleWalk, p.x, p.y, p.w, p.h, p.facing < 0, playerAlpha, Math.floor(p.walkTime / .11) % 6);
+    else drawCharacter(playerArt, p.x, p.y, p.w, p.h, p.facing < 0, playerAlpha);
     ctx.restore();
 
     let hudX = 10;
@@ -831,7 +1002,7 @@
     ctx.font = '900 11px ui-monospace, monospace';
     ctx.fillStyle = 'rgba(255,255,255,.88)';
     ctx.textAlign = 'right';
-    ctx.fillText(copy().level, w - 10, h - 10);
+    ctx.fillText(`${copy().level} ${bubbleLevel + 1} / 3`, w - 10, h - 10);
     ctx.textAlign = 'start';
     if (s.flash > 0) {
       ctx.fillStyle = `rgba(255,255,255,${Math.min(.30, s.flash)})`;
@@ -865,142 +1036,215 @@
     if (running) animationFrame = requestAnimationFrame(loop);
   }
 
-  function startGame() {
+  function clearInput() {
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    heldFire = false;
+    screenPointer = null;
+    [leftBtn, rightBtn, actionBtn].forEach(btn => btn.classList.remove('held'));
+  }
+
+  function updateGuide() {
+    const jump = game === 'jump';
+    guideTitle.textContent = jump ? 'Paw Jump' : 'Bubble Paws';
+    const src = jump ? 'assets/paw_jump_keyart.jpg' : 'assets/bubble_paws_keyart.jpg';
+    if (guideArt.getAttribute('src') !== src) guideArt.src = src;
+    guideArt.alt = guideTitle.textContent;
+    guideDescription.textContent = jump ? copy().jumpGuide : copy().popGuide;
+    guideTip.textContent = jump ? copy().jumpTip : copy().popTip;
+    guideAction.textContent = jump ? copy().doubleJump : copy().fire;
+    progress.hidden = jump;
+    [...progress.children].forEach((el, i) => el.classList.toggle('active', i <= bubbleLevel));
+    soundBtn.textContent = muted ? '♪ ×' : '♪';
+    soundBtn.setAttribute('aria-pressed', String(muted));
+    soundBtn.setAttribute('aria-label', muted ? copy().unmute : copy().mute);
+    soundBtn.title = muted ? copy().unmute : copy().mute;
+    pauseBtn.setAttribute('aria-label', paused ? copy().resume : copy().pause);
+    pauseBtn.title = (paused ? copy().resume : copy().pause) + ' · P';
+    pauseBtn.textContent = paused ? '▷' : 'Ⅱ';
+    pauseBtn.disabled = !running && !paused;
+  }
+
+  function beginLoop() {
     cancelAnimationFrame(animationFrame);
-    resizeCanvas();
-    if (game === 'jump') initJump(); else initBubblePaws();
-    overlay.hidden = true;
-    running = true;
-    accumulator = 0;
-    lastFrame = performance.now();
+    overlay.hidden = true; running = true; paused = false; overlayMode = 'playing';
+    accumulator = 0; lastFrame = performance.now(); clearInput(); updateGuide();
     animationFrame = requestAnimationFrame(loop);
   }
 
+  function startGame() {
+    if (!demoDrawer.classList.contains('is-open')) return;
+    bubbleLevel = 0;
+    if (game === 'jump') initJump(); else initBubblePaws();
+    resizeCanvas(); beginLoop();
+  }
+
+  function activateOverlay() {
+    if (paused) { beginLoop(); return; }
+    if (game === 'pop' && overlayMode === 'levelClear' && bubbleLevel < LEVELS.length - 1) {
+      bubbleLevel++; initBubblePaws(true); beginLoop(); return;
+    }
+    startGame();
+  }
+
+  function pauseGame() {
+    if (!running) return;
+    running = false; paused = true; overlayMode = 'paused';
+    cancelAnimationFrame(animationFrame); clearInput();
+    setOverlay(copy().paused, copy().pauseText, copy().resume); updateGuide();
+  }
+
   function performAction() {
-    if (!running) { startGame(); return; }
+    if (!running || !demoDrawer.classList.contains('is-open')) return;
     if (game === 'jump') jumpAction(); else fireHarpoon();
   }
 
   function setDemoDrawer(open) {
+    if (open) returnFocus = document.activeElement;
     demoDrawer.classList.toggle('is-open', open);
+    demoDrawer.inert = !open;
     demoDrawer.setAttribute('aria-hidden', String(!open));
     demoRail.setAttribute('aria-expanded', String(open));
     document.body.classList.toggle('demo-open', open);
+    document.querySelector('main').inert = open;
+    document.querySelector('header').inert = open;
+    document.querySelector('footer').inert = open;
     if (open) {
-      requestAnimationFrame(() => {
-        resizeCanvas();
-        if (!running) selectGame(game);
-        demoClose.focus();
-      });
+      resizeCanvas(); updateGuide(); demoClose.focus();
     } else {
-      running = false;
-      cancelAnimationFrame(animationFrame);
-      selectGame(game);
-      demoRail.focus();
+      pauseGame(); clearInput();
+      if (returnFocus?.isConnected) returnFocus.focus(); else demoRail.focus();
     }
   }
 
   function selectGame(next) {
-    game = next;
-    running = false;
-    cancelAnimationFrame(animationFrame);
-    accumulator = 0;
-    keys.left = keys.right = keys.screenLeft = keys.screenRight = false;
+    game = next === 'pop' ? 'pop' : 'jump'; bubbleLevel = 0;
+    running = false; paused = false; overlayMode = 'intro';
+    cancelAnimationFrame(animationFrame); accumulator = 0; clearInput();
     screen.classList.toggle('jump-mode', game === 'jump');
     screen.classList.toggle('pop-mode', game === 'pop');
-    tabs.forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.game === game)));
+    stage.classList.toggle('landscape-game', game === 'pop');
+    tabs.forEach(tab => {
+      const selected = tab.dataset.game === game;
+      tab.setAttribute('aria-selected', String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+    });
     screen.setAttribute('aria-labelledby', game === 'jump' ? 'jump-tab' : 'pop-tab');
-    resizeCanvas();
-    if (game === 'jump') {
-      initJump();
-      setOverlay('Paw Jump', copy().jumpIntro);
-    } else {
-      initBubblePaws();
-      setOverlay('Bubble Paws', copy().bubbleIntro);
-    }
+    if (game === 'jump') { initJump(); setOverlay('Paw Jump', copy().jumpIntro); }
+    else { initBubblePaws(); setOverlay('Bubble Paws', copy().bubbleIntro); }
+    resizeCanvas(); refreshLanguageUi(); updateGuide();
   }
 
   function refreshLanguageUi() {
-    leftBtn.textContent = copy().left;
-    rightBtn.textContent = copy().right;
-    if (!running) {
-      selectGame(game);
-      return;
-    }
-    if (game === 'jump' && jumpState) {
+    leftBtn.textContent = copy().left; rightBtn.textContent = copy().right;
+    if (game === 'jump') {
       syncJumpAction();
-      updateScoreline(` · ${Math.floor(jumpState.altitude / (12 * jumpScale()))} m`);
-    } else if (bubbleState) {
+      updateScoreline(` · ${Math.floor((jumpState?.altitude || 0) / 12)} m`);
+    } else {
       actionBtn.textContent = copy().fire;
-      updateScoreline(` · ${Math.ceil(bubbleState.remaining)} ${copy().seconds}`);
+      updateScoreline(` · ${Math.ceil(bubbleState?.remaining || 0)} ${copy().seconds}`);
     }
+    if (overlayMode === 'intro') setOverlay(game === 'jump' ? 'Paw Jump' : 'Bubble Paws', game === 'jump' ? copy().jumpIntro : copy().bubbleIntro);
+    if (paused) setOverlay(copy().paused, copy().pauseText, copy().resume);
+    if (overlayMode === 'jumpEnd') setOverlay(copy().jumpEndTitle, copy().jumpEnd(Math.floor(jumpState.altitude / 12), jumpState.bones), copy().retry);
+    if (overlayMode === 'bubbleEnd') setOverlay(copy().bubbleEndTitle, copy().bubbleEnd(bubbleState.hits, score), copy().retry);
+    if (overlayMode === 'timeUp') setOverlay(copy().timeUpTitle, copy().timeUp(bubbleState.hits, score), copy().retry);
+    if (overlayMode === 'levelClear') {
+      if (bubbleLevel < LEVELS.length - 1) setOverlay(copy().clearTitle, copy().clear(bubbleState.hits, score), copy().next);
+      else setOverlay(copy().complete, copy().completeText(score), copy().oneMore);
+    }
+    updateGuide(); if (!running) draw();
   }
 
   function bindHold(button, key) {
     button.addEventListener('pointerdown', event => {
-      event.preventDefault();
-      keys[key] = true;
-      button.setPointerCapture?.(event.pointerId);
+      if (!running) return;
+      event.preventDefault(); keys[key] = true;
+      button.classList.add('held'); button.setPointerCapture?.(event.pointerId);
     });
-    ['pointerup', 'pointercancel', 'pointerleave'].forEach(name => button.addEventListener(name, () => { keys[key] = false; }));
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(name => button.addEventListener(name, () => {
+      keys[key] = false; button.classList.remove('held');
+    }));
   }
 
-  bindHold(leftBtn, 'left');
-  bindHold(rightBtn, 'right');
-  actionBtn.addEventListener('pointerdown', event => { event.preventDefault(); performAction(); });
+  let screenPointer = null;
+  bindHold(leftBtn, 'left'); bindHold(rightBtn, 'right');
+  actionBtn.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    if (!running) return;
+    actionBtn.setPointerCapture?.(event.pointerId);
+    heldFire = game === 'pop'; actionBtn.classList.add('held'); performAction();
+  });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(name => actionBtn.addEventListener(name, () => {
+    heldFire = false; actionBtn.classList.remove('held');
+  }));
+  actionBtn.addEventListener('click', event => { if (event.detail === 0) performAction(); });
   restartBtn.addEventListener('click', startGame);
-  startButton.addEventListener('click', startGame);
+  startButton.addEventListener('click', activateOverlay);
+  pauseBtn.addEventListener('click', () => { if (paused) beginLoop(); else pauseGame(); });
+  soundBtn.addEventListener('click', () => {
+    muted = !muted; try { localStorage.setItem('firu-demo-muted', String(muted)); } catch (_) {}
+    updateGuide();
+  });
   demoRail.addEventListener('click', () => setDemoDrawer(true));
   openDemo.addEventListener('click', () => setDemoDrawer(true));
   demoClose.addEventListener('click', () => setDemoDrawer(false));
   drawerBackdrop.addEventListener('click', () => setDemoDrawer(false));
-  tabs.forEach(tab => tab.addEventListener('click', () => selectGame(tab.dataset.game)));
+  document.getElementById('demoDownload').addEventListener('click', () => setDemoDrawer(false));
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => selectGame(tab.dataset.game));
+    tab.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault(); event.stopPropagation();
+      selectGame(game === 'jump' ? 'pop' : 'jump');
+      tabs.find(t => t.dataset.game === game).focus();
+    });
+  });
   document.querySelectorAll('[data-play]').forEach(button => button.addEventListener('click', () => {
-    selectGame(button.dataset.play);
-    setDemoDrawer(true);
+    selectGame(button.dataset.play); setDemoDrawer(true);
   }));
-  let screenPointer = null;
   function steerFromScreen(clientX) {
-    const x = clientX - canvas.getBoundingClientRect().left;
-    keys.screenLeft = x < width() * .42;
-    keys.screenRight = x > width() * .58;
+    const rect = canvas.getBoundingClientRect();
+    const x = (clientX - rect.left) / rect.width;
+    keys.screenLeft = x < .42; keys.screenRight = x > .58;
   }
   canvas.addEventListener('pointerdown', event => {
     if (!running) return;
-    event.preventDefault();
-    screenPointer = event.pointerId;
-    canvas.setPointerCapture?.(event.pointerId);
-    steerFromScreen(event.clientX);
+    event.preventDefault(); screenPointer = event.pointerId;
+    canvas.setPointerCapture?.(event.pointerId); steerFromScreen(event.clientX);
   });
-  canvas.addEventListener('pointermove', event => {
+  canvas.addEventListener('pointermove', event => { if (screenPointer === event.pointerId) steerFromScreen(event.clientX); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(name => canvas.addEventListener(name, event => {
     if (screenPointer !== event.pointerId) return;
-    steerFromScreen(event.clientX);
-  });
-  ['pointerup', 'pointercancel'].forEach(name => canvas.addEventListener(name, event => {
-    if (screenPointer !== event.pointerId) return;
-    screenPointer = null;
-    keys.screenLeft = keys.screenRight = false;
+    screenPointer = null; keys.screenLeft = keys.screenRight = false;
   }));
   window.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && demoDrawer.classList.contains('is-open')) { setDemoDrawer(false); return; }
+    if (!demoDrawer.classList.contains('is-open')) return;
+    if (event.key === 'Tab') {
+      const focusable = [...demoDrawer.querySelectorAll('button:not(:disabled), a[href]')].filter(el => el.tabIndex >= 0 && el.getClientRects().length);
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      return;
+    }
+    if (event.key === 'Escape') { event.preventDefault(); if (running) pauseGame(); else setDemoDrawer(false); return; }
+    if (event.code === 'KeyP') { if (!event.repeat) { if (paused) beginLoop(); else pauseGame(); } return; }
+    if (!running) return;
     if (['ArrowLeft', 'a', 'A'].includes(event.key)) { keys.left = true; event.preventDefault(); }
     if (['ArrowRight', 'd', 'D'].includes(event.key)) { keys.right = true; event.preventDefault(); }
-    if (event.key === ' ') { if (!event.repeat) performAction(); event.preventDefault(); }
+    if (event.code === 'Space' && event.target !== pauseBtn && event.target !== soundBtn) {
+      event.preventDefault(); heldFire = game === 'pop'; if (!event.repeat) performAction();
+    }
   });
   window.addEventListener('keyup', event => {
     if (['ArrowLeft', 'a', 'A'].includes(event.key)) keys.left = false;
     if (['ArrowRight', 'd', 'D'].includes(event.key)) keys.right = false;
+    if (event.code === 'Space') heldFire = false;
   });
+  window.addEventListener('blur', () => { pauseGame(); clearInput(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { pauseGame(); clearInput(); } });
   window.addEventListener('firu:languagechange', refreshLanguageUi);
-  window.addEventListener('resize', () => {
-    resizeCanvas();
-    if (!running) selectGame(game);
-  });
+  const resizeObserver = new ResizeObserver(() => resizeCanvas());
+  resizeObserver.observe(stage);
   Object.values(art).forEach(img => img.addEventListener('load', () => { if (!running) draw(); }));
-
-  screen.classList.add('jump-mode');
-  resizeCanvas();
-  leftBtn.textContent = copy().left;
-  rightBtn.textContent = copy().right;
   selectGame('jump');
 })();
