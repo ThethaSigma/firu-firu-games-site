@@ -8,11 +8,15 @@
   const pageCopy = {
     tr: {
       title: 'Firu Firu Games — İki oyun, tek pati dünyası',
-      description: "Firu Firu Games'i keşfet: Paw Jump ve Bubble Paws tek mobil uygulamada. Google Play veya App Store'dan ücretsiz indir."
+      description: "Firu Firu Games'i keşfet: Paw Jump ve Bubble Paws tek mobil uygulamada. Google Play veya App Store'dan ücretsiz indir.",
+      ogDescription: "Paw Jump ve Bubble Paws tek mobil uygulamada. Gerçek bir Cocker Spaniel’den doğan arcade macerası, ücretsiz.",
+      locale: 'tr_TR'
     },
     en: {
       title: 'Firu Firu Games — Two games, one paw universe',
-      description: 'Discover Firu Firu Games: Paw Jump and Bubble Paws in one mobile app. Download free on Google Play or the App Store.'
+      description: 'Discover Firu Firu Games: Paw Jump and Bubble Paws in one mobile app. Download free on Google Play or the App Store.',
+      ogDescription: 'Paw Jump and Bubble Paws in one mobile app. An arcade adventure inspired by a real Cocker Spaniel — free to download.',
+      locale: 'en_US'
     }
   };
   let currentLanguage = 'tr';
@@ -26,8 +30,14 @@
     }
   }
 
+  function setMeta(selector, attribute, value) {
+    const element = document.querySelector(selector);
+    if (element) element.setAttribute(attribute, value);
+  }
+
   function applyLanguage(language, persist = true) {
     currentLanguage = language === 'en' ? 'en' : 'tr';
+    const copy = pageCopy[currentLanguage];
     document.documentElement.lang = currentLanguage;
 
     document.querySelectorAll('[data-tr][data-en]').forEach(element => {
@@ -40,9 +50,14 @@
       element.alt = element.dataset[`alt${currentLanguage === 'tr' ? 'Tr' : 'En'}`];
     });
 
-    document.title = pageCopy[currentLanguage].title;
-    const description = document.querySelector('meta[name="description"]');
-    if (description) description.content = pageCopy[currentLanguage].description;
+    document.title = copy.title;
+    setMeta('meta[name="description"]', 'content', copy.description);
+    setMeta('meta[property="og:title"]', 'content', copy.title);
+    setMeta('meta[property="og:description"]', 'content', copy.ogDescription);
+    setMeta('meta[property="og:locale"]', 'content', copy.locale);
+    setMeta('meta[name="twitter:title"]', 'content', copy.title);
+    setMeta('meta[name="twitter:description"]', 'content', copy.description);
+
     Object.entries(languageButtons).forEach(([languageCode, button]) => {
       if (button) button.setAttribute('aria-pressed', String(languageCode === currentLanguage));
     });
