@@ -255,13 +255,12 @@
     .games-showcase .section-head h2 { max-width: 11ch; }
     .games-showcase .section-head p { justify-self: end; }
     .games-grid { gap: 30px; align-items: start; }
-    .game-card { min-height: 610px; border: 0; border-radius: 42px; box-shadow: 0 28px 70px rgba(12,16,37,.22); }
+    .game-card { display: flex; flex-direction: column; min-height: 0; border: 0; border-radius: 42px; background: #10142c; box-shadow: 0 28px 70px rgba(12,16,37,.22); }
     .game-card:first-child { transform: rotate(-1deg); }
     .game-card:last-child { transform: translateY(42px) rotate(1deg); }
-    .game-card .game-art-paw { object-position: 78% center; }
-    .game-card .game-art-bubble { object-position: 18% center; }
-    .game-card::after { background: linear-gradient(180deg, rgba(5,9,22,.02) 18%, rgba(5,9,22,.2) 45%, rgba(5,9,22,.96) 100%); }
-    .game-card-copy { padding: 38px; }
+    .game-card img { position: relative; inset: auto; z-index: 0; height: auto; aspect-ratio: 16 / 9; object-fit: cover; object-position: center; }
+    .game-card::after { content: none; }
+    .game-card-copy { position: relative; inset: auto; padding: 28px 32px 32px; }
     .game-card-copy small { display: inline-flex; padding: .35rem .58rem; border-radius: 999px; background: rgba(255,210,74,.95); color: var(--ink); }
     .game-card-copy p { max-width: 31rem; color: rgba(255,255,255,.78); }
     .game-card .btn { border-color: white; box-shadow: 4px 4px 0 white; }
@@ -376,7 +375,7 @@
       .hero-showcase img { box-shadow: 10px 11px 0 var(--coral), -6px -6px 0 rgba(116,92,255,.58); }
       .hero-badge { right: 4px; bottom: -22px; }
       .games-showcase { padding-block: 96px 76px; }
-      .game-card { min-height: 500px; border-radius: 30px; }
+      .game-card { min-height: 0; border-radius: 30px; }
       .game-card-copy { padding: 25px; }
       .game-card .btn.secondary { margin: .65rem 0 0; }
       #surec { margin-top: 0; border-radius: 34px 34px 0 0; }
@@ -494,7 +493,7 @@
         </div>
         <div class="games-grid">
           <article class="game-card">
-            <img class="game-art-paw" src="assets/firufiru_games_showcase.webp" alt="Paw Jump dünyasında Firu ve gökyüzündeki platformlar" data-alt-tr="Paw Jump dünyasında Firu ve gökyüzündeki platformlar" data-alt-en="Firu and floating platforms in the Paw Jump world" loading="lazy">
+            <img class="game-art-paw" src="assets/paw_jump_keyart.jpg" alt="Paw Jump dünyasında Firu ve gökyüzündeki platformlar" data-alt-tr="Paw Jump dünyasında Firu ve gökyüzündeki platformlar" data-alt-en="Firu and floating platforms in the Paw Jump world" loading="lazy">
             <div class="game-card-copy">
               <small data-tr="Yüksel · Kaçın · Rekor kır" data-en="Climb · Dodge · Break records">Yüksel · Kaçın · Rekor kır</small>
               <h3>Paw Jump</h3>
@@ -504,7 +503,7 @@
             </div>
           </article>
           <article class="game-card">
-            <img class="game-art-bubble" src="assets/firufiru_games_showcase.webp" alt="Bubble Paws laboratuvarında Firu, kedi ve baloncuklar" data-alt-tr="Bubble Paws laboratuvarında Firu, kedi ve baloncuklar" data-alt-en="Firu, a cat, and bubbles in the Bubble Paws laboratory" loading="lazy">
+            <img class="game-art-bubble" src="assets/bubble_paws_keyart.jpg" alt="Bubble Paws laboratuvarında Firu, kedi ve baloncuklar" data-alt-tr="Bubble Paws laboratuvarında Firu, kedi ve baloncuklar" data-alt-en="Firu, a cat, and bubbles in the Bubble Paws laboratory" loading="lazy">
             <div class="game-card-copy">
               <small data-tr="Nişan al · Patlat · Hızlan" data-en="Aim · Pop · Move fast">Nişan al · Patlat · Hızlan</small>
               <h3>Bubble Paws</h3>
