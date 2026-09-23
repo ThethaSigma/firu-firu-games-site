@@ -324,15 +324,15 @@
     .stamp { align-self: flex-start; margin-top: auto; padding: .32rem .62rem; border: 2px dashed currentColor; border-radius: 10px; font-size: .72rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; transform: rotate(-8deg); }
     .desk-hero:hover, .desk-rule:hover, .proto:hover, .quip:hover { transform: rotate(0deg) translateY(-4px); }
     .desk-hero, .desk-rule, .proto, .quip { transition: transform .2s ease; }
-    .gossip { margin-top: 34px; }
-    .gossip-head { max-width: 40rem; margin-bottom: 16px; color: white; }
-    .gossip-head h3 { font-size: clamp(1.8rem, 3vw, 2.6rem); }
-    .gossip-head p { margin: .45rem 0 0; color: rgba(255,255,255,.72); }
+    .gossip { margin: 0; padding: 88px 0 100px; background: var(--yellow); color: var(--ink); }
+    .gossip-head { max-width: 40rem; margin-bottom: 22px; color: var(--ink); }
+    .gossip-head h3 { font-size: clamp(2.2rem, 4vw, 3.4rem); }
+    .gossip-head p { margin: .55rem 0 0; color: rgba(12,16,37,.72); font-size: 1.12rem; }
     .gossip-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     .quip { display: flex; flex-direction: column; min-height: 250px; padding: 22px 22px 18px; border-radius: 26px; color: var(--ink); box-shadow: 0 16px 34px rgba(0,0,0,.24); }
-    .quip-friend { background: var(--yellow); transform: rotate(-1deg); }
-    .quip-wife { background: #fffdf8; transform: rotate(.7deg); }
-    .quip-reddit { background: #f3efe6; transform: rotate(-.45deg); }
+    .quip-friend { background: #fffdf8; transform: rotate(-1deg); }
+    .quip-wife { background: var(--mint); transform: rotate(.7deg); }
+    .quip-reddit { background: var(--ink); color: white; transform: rotate(-.45deg); }
     .stars { margin: 0; font-size: 1.05rem; letter-spacing: .14em; line-height: 1; }
     .stars .dim { opacity: .28; }
     .quip-line { margin: .9rem 0 0; font-size: clamp(1.25rem, 1.8vw, 1.65rem); font-weight: 900; letter-spacing: -.04em; line-height: 1.18; }
@@ -405,6 +405,7 @@
         <div class="nav-links">
           <a href="#oyunlar" data-tr="Oyunlar" data-en="Games">Oyunlar</a>
           <a href="#surec" data-tr="Nasıl yapıyoruz?" data-en="How we build">Nasıl yapıyoruz?</a>
+          <a href="#yorumlar" data-tr="Yorumlar" data-en="Comments">Yorumlar</a>
           <a href="#indir" data-tr="Ücretsiz indir" data-en="Download free">Ücretsiz indir</a>
         </div>
         <div class="language-switch" role="group" aria-label="Dil seçimi" data-aria-tr="Dil seçimi" data-aria-en="Language selection">
@@ -593,28 +594,31 @@
             </article>
           </div>
         </div>
-        <div class="gossip">
-          <div class="gossip-head">
-            <h3 data-tr="Yorum köşesi" data-en="Comment corner">Yorum köşesi</h3>
-            <p data-tr="Üç kişilik örneklem. İkisi evden, biri internetten." data-en="A sample of three. Two from home, one from the internet.">Üç kişilik örneklem. İkisi evden, biri internetten.</p>
-          </div>
-          <div class="gossip-grid">
-            <article class="quip quip-friend">
-              <p class="stars" aria-hidden="true">★★★★★</p>
-              <p class="quip-line" data-tr="“Oynadığım en iyi oyun.”" data-en="“The best game I’ve ever played.”">“Oynadığım en iyi oyun.”</p>
-              <p class="quip-by" data-tr="En yakın arkadaşım" data-en="My closest friend">En yakın arkadaşım</p>
-            </article>
-            <article class="quip quip-wife">
-              <p class="stars" aria-hidden="true">★★★★★</p>
-              <p class="quip-line" data-tr="“Bence parmaklarını kullanmanın en etkili yöntemi bu.”" data-en="“I think this is the most effective way to use your fingers.”">“Bence parmaklarını kullanmanın en etkili yöntemi bu.”</p>
-              <p class="quip-by" data-tr="Karım" data-en="My wife">Karım</p>
-            </article>
-            <article class="quip quip-reddit">
-              <p class="stars" aria-hidden="true">★★★<span class="dim">★★</span></p>
-              <p class="quip-line" data-tr="“Bence görseller daha iyi olabilir.”" data-en="“I think the visuals could be better.”">“Bence görseller daha iyi olabilir.”</p>
-              <p class="quip-by" data-tr="Reddit’te rastgele biri" data-en="Random person on Reddit">Reddit’te rastgele biri</p>
-            </article>
-          </div>
+      </div>
+    </section>
+
+    <section class="gossip" id="yorumlar" aria-labelledby="gossip-title">
+      <div class="shell">
+        <div class="gossip-head">
+          <h3 id="gossip-title" data-tr="Yorum köşesi" data-en="Comment corner">Yorum köşesi</h3>
+          <p data-tr="Üç kişilik örneklem. İkisi evden, biri internetten." data-en="A sample of three. Two from home, one from the internet.">Üç kişilik örneklem. İkisi evden, biri internetten.</p>
+        </div>
+        <div class="gossip-grid">
+          <article class="quip quip-friend">
+            <p class="stars" aria-hidden="true">★★★★★</p>
+            <p class="quip-line" data-tr="“Oynadığım en iyi oyun.”" data-en="“The best game I’ve ever played.”">“Oynadığım en iyi oyun.”</p>
+            <p class="quip-by" data-tr="En yakın arkadaşım" data-en="My closest friend">En yakın arkadaşım</p>
+          </article>
+          <article class="quip quip-wife">
+            <p class="stars" aria-hidden="true">★★★★★</p>
+            <p class="quip-line" data-tr="“Bence parmaklarını kullanmanın en etkili yöntemi bu.”" data-en="“I think this is the most effective way to use your fingers.”">“Bence parmaklarını kullanmanın en etkili yöntemi bu.”</p>
+            <p class="quip-by" data-tr="Karım" data-en="My wife">Karım</p>
+          </article>
+          <article class="quip quip-reddit">
+            <p class="stars" aria-hidden="true">★★★<span class="dim">★★</span></p>
+            <p class="quip-line" data-tr="“Bence görseller daha iyi olabilir.”" data-en="“I think the visuals could be better.”">“Bence görseller daha iyi olabilir.”</p>
+            <p class="quip-by" data-tr="Reddit’te rastgele biri" data-en="Random person on Reddit">Reddit’te rastgele biri</p>
+          </article>
         </div>
       </div>
     </section>
