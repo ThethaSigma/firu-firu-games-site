@@ -113,7 +113,9 @@
     .game-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
     .game-tab { border: 0; border-radius: 12px; color: var(--white); background: rgba(255,255,255,.10); min-height: 46px; font-weight: 900; cursor: pointer; }
     .game-tab[aria-selected="true"] { color: var(--ink); background: var(--mint); }
-    .screen { position: relative; background: #d9f7ee; border: 3px solid #080b1b; border-radius: 21px; overflow: hidden; aspect-ratio: 4 / 3; }
+    .screen { position: relative; width: 100%; margin-inline: auto; background: #d9f7ee; border: 3px solid #080b1b; border-radius: 21px; overflow: hidden; transition: width .25s ease, aspect-ratio .25s ease; }
+    .screen.jump-mode { width: min(100%, 400px); aspect-ratio: 400 / 700; }
+    .screen.pop-mode { aspect-ratio: 680 / 400; }
     canvas { display: block; width: 100%; height: 100%; }
     .game-overlay { position: absolute; inset: 0; display: grid; place-items: center; padding: 1.2rem; text-align: center; background: rgba(17,22,46,.84); color: white; }
     .game-overlay[hidden] { display: none; }
@@ -419,7 +421,7 @@
   <button class="demo-rail" id="demoRail" aria-controls="demoDrawer" aria-expanded="false">WEB DEMO</button>
   <aside class="demo-drawer" id="demoDrawer" aria-hidden="true" aria-label="Web demo paneli" data-aria-tr="Web demo paneli" data-aria-en="Web demo panel">
     <div class="drawer-head">
-      <div><small data-tr="İKİNCİL DENEYİM" data-en="OPTIONAL EXPERIENCE">İKİNCİL DENEYİM</small><strong data-tr="Tarayıcıda küçük bir tur" data-en="A quick browser run">Tarayıcıda küçük bir tur</strong></div>
+      <div><small data-tr="İKİNCİL DENEYİM" data-en="OPTIONAL EXPERIENCE">İKİNCİL DENEYİM</small><strong data-tr="Gerçeğe yakın oynanabilir demo" data-en="A faithful playable demo">Gerçeğe yakın oynanabilir demo</strong></div>
       <button class="drawer-close" id="demoClose" aria-label="Web demo panelini kapat" data-aria-tr="Web demo panelini kapat" data-aria-en="Close web demo panel">×</button>
     </div>
     <div class="arcade" id="oyna" aria-label="Firu Firu mini oyun konsolu" data-aria-tr="Firu Firu mini oyun konsolu" data-aria-en="Firu Firu mini game console">
