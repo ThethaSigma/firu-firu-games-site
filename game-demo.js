@@ -60,8 +60,8 @@
       score: 'SKOR', best: 'EN İYİ', start: 'Oyunu başlat', retry: 'Tekrar dene', oneMore: 'Bir tur daha',
       left: '← SOL', right: 'SAĞ →', doubleJump: 'ÇİFT ZIPLA', fire: 'ATEŞ', seconds: 'sn', combo: 'KOMBO',
       bubbles: 'BALON', level: 'BÖLÜM 1', timeUpTitle: 'Süre doldu',
-      jumpIntro: 'Gerçek ayarlara yakın demo: Firu otomatik sıçrar. Sağa-sola yönlendir, kemikleri topla; güç simgesini alınca havada çift zıpla.',
-      bubbleIntro: '1. bölüm demosu: Tek büyük balonu zıpkınla dört aşamada parçala. Firu’yu sağa-sola taşı; ATEŞ ya da boşlukla zıpkın fırlat.',
+      jumpIntro: 'Sol ya da sağa basılı tut. Firu düşünce kendiliğinden seker. Çift zıplama ikonu alınca, düşerken de çalışır. Çatlak platform tutmaz.',
+      bubbleIntro: 'Sol ya da sağa basılı tut. ATEŞ zıpkını dümdüz yukarı yollar. Büyük balon ikiye bölünür; en küçük parça yok olur.',
       jumpEndTitle: 'Paw Jump turu bitti',
       jumpEnd: (metres, bones) => `${metres} metreye çıktın ve ${bones} kemik topladın.`,
       clearTitle: 'Bölüm temiz!',
@@ -74,8 +74,8 @@
       score: 'SCORE', best: 'BEST', start: 'Start game', retry: 'Try again', oneMore: 'One more run',
       left: '← LEFT', right: 'RIGHT →', doubleJump: 'DOUBLE JUMP', fire: 'FIRE', seconds: 's', combo: 'COMBO',
       bubbles: 'BUBBLES', level: 'LEVEL 1', timeUpTitle: 'Time up',
-      jumpIntro: 'A closer-to-game demo: Firu jumps automatically. Steer left and right, collect bones, and grab the power-up to double-jump in mid-air.',
-      bubbleIntro: 'Level 1 demo: Split one large bubble through four stages. Move Firu left and right; press FIRE or space to launch the harpoon.',
+      jumpIntro: 'Hold left or right. Firu bounces on landing. Double jump works even while falling, once you collect the icon. Cracked platforms do not hold.',
+      bubbleIntro: 'Hold left or right. FIRE sends the harpoon straight up. A large bubble splits in two until the smallest piece pops.',
       jumpEndTitle: 'Paw Jump run over',
       jumpEnd: (metres, bones) => `You climbed ${metres} metres and collected ${bones} bones.`,
       clearTitle: 'Level clear!',
@@ -99,7 +99,17 @@
   let lastFrame = 0;
   let accumulator = 0;
   let score = 0;
-  let keys = { left: false, right: false };
+  let keys = { left: false, right: false, screenLeft: false, screenRight: false };
+
+  function steer() {
+    return Number(keys.right || keys.screenRight) - Number(keys.left || keys.screenLeft);
+  }
+
+  function syncJumpAction() {
+    const charges = jumpState ? jumpState.doubleJumps : 0;
+    actionBtn.textContent = `${copy().doubleJump} ×${charges}`;
+    actionBtn.style.opacity = game === 'jump' && charges <= 0 ? '.42' : '1';
+  }
   let jumpState = null;
   let bubbleState = null;
 
@@ -230,7 +240,7 @@
     return {
       x, y, originX: x, w, h: 30 * scale, type, variant,
       phase: Math.random() * Math.PI * 2,
-      range: 34 * scale + Math.random() * 35 * scale,
+      range: 90 * scale,
       landedPulse: 0
     };
   }
@@ -246,21 +256,27 @@
 
   function generateJumpPlatform() {
     const s = jumpState;
+    if (!s.platforms.length) return;
     const scale = jumpScale();
     const top = s.platforms.reduce((a, b) => a.y < b.y ? a : b);
     const metres = s.altitude / (12 * scale);
     const gap = clamp(70 + metres / 80, 70, 112) * scale * (.96 + Math.random() * .08);
     const platformWidth = (56 + Math.random() * 34) * scale;
-    const reach = Math.min(185 * scale, width() * .43);
+    const reach = 243 * scale;
     const x = clamp(top.x + (Math.random() * 2 - 1) * reach, 8, width() - platformWidth - 8);
     const roll = Math.random();
     const springChance = metres > 20 ? .12 : .06;
     const movingChance = metres > 75 ? .15 : 0;
-    const type = roll < springChance ? 'spring' : roll < springChance + movingChance ? 'moving' : 'normal';
-    const variant = metres > 160 ? 'stone' : Math.random() < .68 ? 'grass' : 'default';
+    const fakeChance = metres > 110 ? .12 : 0;
+    let type = 'normal';
+    if (roll < springChance) type = 'spring';
+    else if (roll < springChance + movingChance) type = 'moving';
+    else if (roll < springChance + movingChance + fakeChance) type = 'fake';
+    const variant = type === 'fake' || metres > 160 ? 'stone' : Math.random() < .68 ? 'grass' : 'default';
     const platform = makePlatform(x, top.y - gap, platformWidth, type, variant);
+    if (type === 'moving') platform.range = 90 * scale;
     s.platforms.push(platform);
-    addJumpItem(platform);
+    if (type !== 'fake') addJumpItem(platform);
   }
 
   function initJump() {
@@ -287,7 +303,7 @@
       bonusScore: 0, lives: 3, doubleJumps: 0, combo: 0, shake: 0, elapsed: 0
     };
     platforms.slice(1).forEach(addJumpItem);
-    actionBtn.textContent = `${copy().doubleJump} ×0`;
+    syncJumpAction();
     updateScoreline(' · 0 m');
     drawJump();
   }
@@ -296,11 +312,11 @@
     if (!running || game !== 'jump' || !jumpState) return;
     const s = jumpState;
     const p = s.player;
-    if (s.doubleJumps <= 0 || p.vy >= 620 * jumpScale()) return;
+    if (s.doubleJumps <= 0) return;
     p.vy = -560 * jumpScale();
     p.squash = -.24;
     s.doubleJumps -= 1;
-    actionBtn.textContent = `${copy().doubleJump} ×${s.doubleJumps}`;
+    syncJumpAction();
     spawnParticles(s.particles, p.x + p.w / 2, p.y + p.h * .78, ['#8cf4ff', '#ffffff', '#8a7dff'], 13, 120 * jumpScale());
     playSfx('doubleJump', .22);
   }
@@ -328,12 +344,14 @@
     const s = jumpState;
     const p = s.player;
     const scale = jumpScale();
-    const direction = Number(keys.right) - Number(keys.left);
+    const direction = steer();
     const target = direction * 260 * scale;
-    const acceleration = direction && Math.sign(target) !== Math.sign(p.vx) ? 2600 : 1800;
-    if (direction) p.vx += clamp(target - p.vx, -acceleration * scale * dt, acceleration * scale * dt);
-    else p.vx *= Math.max(0, 1 - 8 * dt);
-    if (Math.abs(p.vx) > 3) p.facing = Math.sign(p.vx);
+    const reversing = direction && p.vx !== 0 && Math.sign(target) !== Math.sign(p.vx);
+    const acceleration = (reversing ? 2600 : 1800) * scale;
+    if (direction) p.vx += clamp(target - p.vx, -acceleration * dt, acceleration * dt);
+    else p.vx *= Math.exp(-8 * dt);
+    if (Math.abs(p.vx) < .25 * scale) p.vx = 0;
+    if (Math.abs(p.vx) > 8 * scale) p.facing = Math.sign(p.vx);
 
     const oldBottom = p.y + p.h;
     p.x += p.vx * dt;
@@ -351,12 +369,18 @@
     for (const platform of s.platforms) {
       platform.landedPulse = Math.max(0, platform.landedPulse - dt * 4.5);
       if (platform.type === 'moving') {
-        platform.phase += dt * 1.75;
+        platform.phase += (70 * scale / platform.range) * dt;
         platform.x = clamp(platform.originX + Math.sin(platform.phase) * platform.range, 5, width() - platform.w - 5);
       }
       const hitLeft = p.x + p.w * .63;
       const hitRight = p.x + p.w * .37;
       if (p.vy > 40 * scale && oldBottom <= platform.y + 6 * scale && p.y + p.h >= platform.y && hitLeft > platform.x && hitRight < platform.x + platform.w) {
+        if (platform.type === 'fake') {
+          platform.crumble = true;
+          s.shake = 7;
+          playSfx('hit', .16);
+          continue;
+        }
         p.y = platform.y - p.h;
         p.vy = (platform.type === 'spring' ? -980 : -560) * scale;
         p.squash = .26;
@@ -369,6 +393,9 @@
         spawnParticles(s.particles, p.x + p.w / 2, platform.y, ['#f8df7b', '#ffffff', '#76e4a3'], platform.type === 'spring' ? 12 : 7, 70 * scale);
         playSfx(platform.type === 'spring' ? 'spring' : 'jump', platform.type === 'spring' ? .22 : .10, .96 + Math.random() * .08);
       }
+    }
+    if (s.platforms.some(platform => platform.crumble)) {
+      s.platforms = s.platforms.filter(platform => !platform.crumble);
     }
 
     for (let i = s.items.length - 1; i >= 0; i -= 1) {
@@ -384,7 +411,7 @@
           playSfx('bone', .18);
         } else {
           s.doubleJumps = Math.min(3, s.doubleJumps + 1);
-          actionBtn.textContent = `${copy().doubleJump} ×${s.doubleJumps}`;
+          syncJumpAction();
           spawnParticles(s.particles, item.x + item.w / 2, item.y + item.h / 2, ['#78f2ff', '#9c8cff', '#ffffff'], 15, 110 * scale);
           playSfx('doubleJump', .20);
         }
@@ -468,8 +495,21 @@
       ctx.ellipse(platform.x + platform.w / 2, platform.y + platform.h + 5, platform.w * .43, 5 * jumpScale(), 0, 0, Math.PI * 2);
       ctx.fill();
       if (!drawSprite(platformArt(platform), platform.x, platform.y - 6 + pulse, platform.w, platform.h + 13 - pulse)) {
-        ctx.fillStyle = platform.type === 'spring' ? '#ffcf5a' : '#54c56f';
+        ctx.fillStyle = platform.type === 'spring' ? '#ffcf5a' : platform.type === 'fake' ? '#8d97a8' : '#54c56f';
         ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
+      }
+      if (platform.type === 'fake') {
+        ctx.save();
+        ctx.globalAlpha = .7;
+        ctx.strokeStyle = '#ff5964';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(platform.x + 10, platform.y + 6);
+        ctx.lineTo(platform.x + platform.w - 10, platform.y + platform.h);
+        ctx.moveTo(platform.x + platform.w - 10, platform.y + 6);
+        ctx.lineTo(platform.x + 10, platform.y + platform.h);
+        ctx.stroke();
+        ctx.restore();
       }
     }
     for (const item of s.items) {
@@ -531,6 +571,7 @@
       grace: 1.6, shake: 0, flash: 0, clearDelay: 0
     };
     actionBtn.textContent = copy().fire;
+    actionBtn.style.opacity = '1';
     updateScoreline(` · 58 ${copy().seconds}`);
     drawBubblePaws();
   }
@@ -574,7 +615,10 @@
       const offset = childSpec.radius * bubbleScale() * .44;
       const left = makeBubble(bubble.x - offset, bubble.y, childStage, -1, (bubble.colorIndex + 1) % BUBBLE_COLORS.length);
       const right = makeBubble(bubble.x + offset, bubble.y, childStage, 1, (bubble.colorIndex + 2) % BUBBLE_COLORS.length);
-      left.vy = right.vy = -childSpec.bounce * .82 * bubbleScale();
+      const childSpeed = Math.abs(bubble.vx) + 8 * bubbleScale();
+      left.vx = -childSpeed;
+      right.vx = childSpeed;
+      left.vy = right.vy = -400 * bubbleScale();
       s.bubbles.push(left, right);
     }
     if (!s.bubbles.length) s.clearDelay = .62;
@@ -609,9 +653,10 @@
     const s = bubbleState;
     const p = s.player;
     const scale = bubbleScale();
-    const direction = Number(keys.right) - Number(keys.left);
+    const direction = steer();
     const target = direction * 280 * scale;
-    const accel = direction && Math.sign(target) !== Math.sign(p.vx) ? 6800 : 4200;
+    const reversing = direction && p.vx !== 0 && Math.sign(target) !== Math.sign(p.vx);
+    const accel = reversing ? 6800 : 4200;
     if (direction) p.vx += clamp(target - p.vx, -accel * scale * dt, accel * scale * dt);
     else p.vx += clamp(-p.vx, -5200 * scale * dt, 5200 * scale * dt);
     p.x = clamp(p.x + p.vx * dt, 3, width() - p.w - 3);
@@ -860,7 +905,7 @@
     running = false;
     cancelAnimationFrame(animationFrame);
     accumulator = 0;
-    keys.left = keys.right = false;
+    keys.left = keys.right = keys.screenLeft = keys.screenRight = false;
     screen.classList.toggle('jump-mode', game === 'jump');
     screen.classList.toggle('pop-mode', game === 'pop');
     tabs.forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.game === game)));
@@ -883,7 +928,7 @@
       return;
     }
     if (game === 'jump' && jumpState) {
-      actionBtn.textContent = `${copy().doubleJump} ×${jumpState.doubleJumps}`;
+      syncJumpAction();
       updateScoreline(` · ${Math.floor(jumpState.altitude / (12 * jumpScale()))} m`);
     } else if (bubbleState) {
       actionBtn.textContent = copy().fire;
@@ -914,15 +959,28 @@
     selectGame(button.dataset.play);
     setDemoDrawer(true);
   }));
+  let screenPointer = null;
+  function steerFromScreen(clientX) {
+    const x = clientX - canvas.getBoundingClientRect().left;
+    keys.screenLeft = x < width() * .42;
+    keys.screenRight = x > width() * .58;
+  }
   canvas.addEventListener('pointerdown', event => {
     if (!running) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    if (game === 'pop' && bubbleState) {
-      bubbleState.player.x = clamp(x - bubbleState.player.w / 2, 3, width() - bubbleState.player.w - 3);
-      fireHarpoon();
-    }
+    event.preventDefault();
+    screenPointer = event.pointerId;
+    canvas.setPointerCapture?.(event.pointerId);
+    steerFromScreen(event.clientX);
   });
+  canvas.addEventListener('pointermove', event => {
+    if (screenPointer !== event.pointerId) return;
+    steerFromScreen(event.clientX);
+  });
+  ['pointerup', 'pointercancel'].forEach(name => canvas.addEventListener(name, event => {
+    if (screenPointer !== event.pointerId) return;
+    screenPointer = null;
+    keys.screenLeft = keys.screenRight = false;
+  }));
   window.addEventListener('keydown', event => {
     if (event.key === 'Escape' && demoDrawer.classList.contains('is-open')) { setDemoDrawer(false); return; }
     if (['ArrowLeft', 'a', 'A'].includes(event.key)) { keys.left = true; event.preventDefault(); }
