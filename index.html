@@ -162,13 +162,7 @@
 
     .lab { background: var(--ink); color: var(--white); border-radius: 48px 48px 0 0; padding-bottom: 110px; }
     .lab .section-head { padding-top: 90px; }
-    .lab-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 16px; }
-    .note-card { min-height: 220px; border: 2px solid rgba(255,255,255,.28); border-radius: 26px; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; background: rgba(255,255,255,.06); }
-    .note-card.big { grid-row: span 2; background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
-    .scribble { font-family: "Comic Sans MS", cursive; font-size: clamp(2rem, 5vw, 4.7rem); line-height: 1; transform: rotate(-2deg); margin: auto 0; }
-    .note-card small { font-size: .8rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
-    .meter { height: 15px; border: 2px solid currentColor; border-radius: 99px; padding: 2px; margin-top: 1rem; }
-    .meter span { display: block; width: 74%; height: 100%; border-radius: 99px; background: var(--mint); }
+    .workshop-wall { display: grid; grid-template-columns: minmax(0, 1.28fr) minmax(280px, .72fr); gap: 18px; }
     .finale { text-align: center; padding: 110px 0 80px; }
     .finale h2 { font-size: clamp(3rem, 7vw, 7rem); max-width: 11ch; margin: 0 auto 1.5rem; }
     .finale .btn { font-size: 1.12rem; padding: .85rem 1.4rem; }
@@ -183,8 +177,7 @@
       .hero-showcase { max-width: 720px; transform: none; }
       .process { grid-template-columns: repeat(2, 1fr); }
       .step:nth-child(2), .step:nth-child(4) { transform: none; }
-      .lab-grid { grid-template-columns: 1fr; }
-      .note-card.big { grid-row: auto; min-height: 300px; }
+      .workshop-wall, .prototype-row { grid-template-columns: 1fr; }
     }
     @media (max-width: 620px) {
       .shell { width: min(100% - 22px, 1160px); }
@@ -212,8 +205,8 @@
       .brand-banner figcaption { position: static; border-radius: 0; }
       .step { min-height: 230px; }
       .step::before { margin-bottom: 2.5rem; }
-      .lab { border-radius: 34px 34px 0 0; }
-      .lab .section-head { padding-top: 66px; }
+      .lab { border-radius: 0; padding: 56px 0 64px; }
+      .lab .section-head { padding-top: 0; }
     }
 
     /* Premium arcade storefront refresh */
@@ -296,12 +289,41 @@
     .shipaton-banner { position: relative; margin: 72px 0 0; overflow: hidden; border: 3px solid var(--ink); border-radius: 38px; background: var(--ink); box-shadow: 14px 16px 0 rgba(12,16,37,.16); }
     .shipaton-banner img { width: 100%; display: block; aspect-ratio: 16 / 9; object-fit: cover; }
     .shipaton-banner figcaption { position: absolute; right: 18px; bottom: 18px; padding: .62rem .85rem; border-radius: 999px; background: rgba(8,11,27,.84); color: white; font-weight: 900; backdrop-filter: blur(12px); }
-    .lab { border-radius: 0; background: #0a0d20; }
-    .lab .section-head h2 { max-width: 12ch; }
-    .note-card { border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.055); }
-    .note-card.big { border-color: var(--mint); background: var(--mint); }
-    .note-card:nth-child(2) { background: rgba(116,92,255,.28); }
-    .note-card:nth-child(3) { background: rgba(255,89,100,.25); }
+    .lab { position: relative; overflow: hidden; border-radius: 0; padding: 72px 0 84px; background:
+      radial-gradient(circle at 8% 0%, rgba(255,210,74,.14), transparent 24rem),
+      radial-gradient(circle at 96% 100%, rgba(86,230,193,.12), transparent 22rem),
+      #0a0d20; }
+    .lab::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .45; background-image: radial-gradient(rgba(255,255,255,.16) 1.1px, transparent 1.1px); background-size: 22px 22px; mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent); }
+    .lab > .shell { position: relative; z-index: 1; }
+    .lab .section-head { display: block; max-width: 44rem; padding-top: 0; margin-bottom: 28px; }
+    .lab .section-head h2 { max-width: 10ch; }
+    .lab .section-head p { max-width: 34rem; margin-top: .85rem; color: rgba(255,255,255,.74); font-size: 1.18rem; }
+    .desk-hero, .desk-rule, .proto { position: relative; border-radius: 32px; }
+    .desk-hero { display: flex; flex-direction: column; justify-content: space-between; min-height: 420px; padding: 36px 36px 30px; background: #fffdf8; color: var(--ink); box-shadow: 0 24px 48px rgba(0,0,0,.28); transform: rotate(-.6deg); }
+    .washi { position: absolute; top: 16px; left: 50%; width: 86px; height: 18px; transform: translateX(-50%) rotate(-7deg); background: rgba(255,210,74,.78); border-radius: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+    .note-kicker { margin: 18px 0 0; font-size: .75rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .desk-quote { max-width: 14ch; margin: .85rem 0 1.2rem; padding-right: 1.5rem; font-size: clamp(2.35rem, 4vw, 3.7rem); font-weight: 900; letter-spacing: -.055em; line-height: 1.02; }
+    .qmark { display: block; color: var(--coral); font-size: .72em; line-height: .8; }
+    .desk-caption { max-width: 28rem; margin: 0 92px 0 0; font-weight: 800; }
+    .paw-stamp { position: absolute; right: 18px; bottom: 16px; width: 78px; height: 78px; transform: rotate(16deg); opacity: .92; }
+    .desk-rule { display: flex; flex-direction: column; justify-content: space-between; min-height: 420px; padding: 32px 28px 28px; overflow: hidden; background: var(--coral); color: var(--ink); box-shadow: 0 22px 44px rgba(0,0,0,.26); transform: rotate(.8deg); }
+    .desk-rule .note-kicker { margin-top: 8px; padding-right: 68px; }
+    .desk-rule > div { position: relative; z-index: 1; max-width: 14ch; }
+    .desk-rule h3 { max-width: 8ch; margin-top: 0; font-size: clamp(2.5rem, 4vw, 4rem); }
+    .desk-rule p { max-width: 18ch; margin: 1rem 0 0; font-weight: 800; }
+    .rule-index { position: absolute; top: 22px; right: 22px; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: rgba(12,16,37,.14); font-size: 1.05rem; font-weight: 900; letter-spacing: 0; line-height: 1; pointer-events: none; }
+    .prototype-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 6px; }
+    .proto { display: flex; flex-direction: column; min-height: 280px; padding: 34px 24px 22px; color: var(--ink); box-shadow: 0 18px 36px rgba(0,0,0,.24); }
+    .proto .note-kicker { margin-top: 8px; }
+    .proto h3 { margin: .85rem 0 .55rem; font-size: clamp(1.7rem, 2.2vw, 2.25rem); }
+    .proto p { margin: 0; font-weight: 700; }
+    .proto-jump { background: var(--mint); transform: rotate(-1.1deg); }
+    .proto-pop { background: var(--yellow); transform: rotate(.7deg); }
+    .proto-world { background: var(--blue); color: white; transform: rotate(-.4deg); }
+    .proto::before { content: ""; position: absolute; top: 12px; left: 50%; width: 70px; height: 16px; transform: translateX(-50%) rotate(-4deg); border-radius: 2px; background: rgba(255,255,255,.42); }
+    .stamp { align-self: flex-start; margin-top: auto; padding: .32rem .62rem; border: 2px dashed currentColor; border-radius: 10px; font-size: .72rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; transform: rotate(-8deg); }
+    .desk-hero:hover, .desk-rule:hover, .proto:hover { transform: rotate(0deg) translateY(-4px); }
+    .desk-hero, .desk-rule, .proto { transition: transform .2s ease; }
     .finale { color: white; background: linear-gradient(135deg, var(--blue), #4936ca 58%, #231965); }
     .finale .eyebrow { color: var(--yellow); }
     .finale .eyebrow::before { border-color: white; background: var(--coral); }
@@ -321,6 +343,8 @@
       .games-showcase .section-head { grid-template-columns: 1fr; }
       .games-showcase .section-head p { justify-self: start; }
       .game-card:first-child, .game-card:last-child { transform: none; }
+      .workshop-wall, .prototype-row { grid-template-columns: 1fr; }
+      .desk-hero, .desk-rule, .proto { min-height: 0; transform: none; }
     }
     @media (max-width: 620px) {
       header { padding: 6px 0; }
@@ -514,22 +538,46 @@
       <div class="shell">
         <div class="section-head">
           <h2 id="lab-title" data-tr="Atölyeden notlar" data-en="Notes from the workshop">Atölyeden notlar</h2>
-          <p data-tr="Her yeni mekanik önce oynanış hissiyle sınanır; sonra Firu’nun görünümü, sesleri, dünyaları ve ortak ilerleme sistemiyle tamamlanır." data-en="Every new mechanic is tested for feel first, then completed with Firu’s look, sounds, worlds, and shared progression system.">Her yeni mekanik önce oynanış hissiyle sınanır; sonra Firu’nun görünümü, sesleri, dünyaları ve ortak ilerleme sistemiyle tamamlanır.</p>
+          <p data-tr="Duvara çıkanlar oyuna girdi. Gerisi masada kaldı." data-en="What made the wall made the game. The rest stayed on the desk.">Duvara çıkanlar oyuna girdi. Gerisi masada kaldı.</p>
         </div>
-        <div class="lab-grid">
-          <article class="note-card big">
-            <small data-tr="Günün sorusu" data-en="Question of the day">Günün sorusu</small>
-            <p class="scribble" data-tr="“Başparmak bunu tekrar yapmak ister mi?”" data-en="“Does your thumb want to do that again?”">“Başparmak bunu tekrar yapmak ister mi?”</p>
-            <strong data-tr="İyi bir kontrol şeması kendini açıklamaz; kendini hissettirir." data-en="A great control scheme does not explain itself; it makes itself felt.">İyi bir kontrol şeması kendini açıklamaz; kendini hissettirir.</strong>
+        <div class="workshop-wall">
+          <article class="desk-hero">
+            <span class="washi" aria-hidden="true"></span>
+            <div>
+              <p class="note-kicker" data-tr="Günün sorusu" data-en="Question of the day">Günün sorusu</p>
+              <p class="desk-quote"><span class="qmark" aria-hidden="true">“</span><span data-tr="Başparmak bunu tekrar yapmak ister mi?" data-en="Does your thumb want to do that again?">Başparmak bunu tekrar yapmak ister mi?</span></p>
+            </div>
+            <p class="desk-caption" data-tr="İyi bir kontrol şeması kendini açıklamaz; kendini hissettirir." data-en="A great control scheme does not explain itself; it makes itself felt.">İyi bir kontrol şeması kendini açıklamaz; kendini hissettirir.</p>
+            <svg class="paw-stamp" viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="42" rx="14" ry="11" fill="#ff5964"/><circle cx="16" cy="24" r="6" fill="#ff5964"/><circle cx="28" cy="15" r="6.5" fill="#ff5964"/><circle cx="42" cy="15" r="6.5" fill="#ff5964"/><circle cx="52" cy="26" r="5.5" fill="#ff5964"/></svg>
           </article>
-          <article class="note-card">
-            <small data-tr="Prototip radarı" data-en="Prototype radar">Prototip radarı</small>
-            <div><strong data-tr="Oynanış hissi" data-en="Game feel">Oynanış hissi</strong><div class="meter" aria-label="Oynanış hissi yüzde 74" data-aria-tr="Oynanış hissi yüzde 74" data-aria-en="Game feel 74 percent"><span></span></div></div>
+          <article class="desk-rule">
+            <p class="note-kicker" data-tr="Atölye kuralı" data-en="Workshop rule">Atölye kuralı</p>
+            <div>
+              <h3><span data-tr="Önce eğlence." data-en="Fun first.">Önce eğlence.</span><br><span data-tr="Sonra efekt." data-en="Effects second.">Sonra efekt.</span></h3>
+              <p data-tr="Işıltı, sıkıcı bir zıplamayı kurtarmaz." data-en="Sparkle never saves a dull jump.">Işıltı, sıkıcı bir zıplamayı kurtarmaz.</p>
+            </div>
+            <span class="rule-index" aria-hidden="true">01</span>
           </article>
-          <article class="note-card">
-            <small data-tr="Atölye kuralı #01" data-en="Workshop rule #01">Atölye kuralı #01</small>
-            <h3><span data-tr="Önce eğlence." data-en="Fun first.">Önce eğlence.</span><br><span data-tr="Sonra efekt." data-en="Effects second.">Sonra efekt.</span></h3>
-          </article>
+          <div class="prototype-row">
+            <article class="proto proto-jump">
+              <p class="note-kicker" data-tr="Paw Jump · tur 18" data-en="Paw Jump · run 18">Paw Jump · tur 18</p>
+              <h3 data-tr="Çift zıplama" data-en="Double jump">Çift zıplama</h3>
+              <p data-tr="Havada bir an geç kalıyordu. Tetiği öne alınca “bir kez daha” geldi." data-en="It was a beat late in the air. Pulling the trigger forward made people want one more try.">Havada bir an geç kalıyordu. Tetiği öne alınca “bir kez daha” geldi.</p>
+              <b class="stamp" data-tr="Tutuldu" data-en="Kept">Tutuldu</b>
+            </article>
+            <article class="proto proto-pop">
+              <p class="note-kicker" data-tr="Bubble Paws · tur 07" data-en="Bubble Paws · run 07">Bubble Paws · tur 07</p>
+              <h3 data-tr="Küçük balon" data-en="Tiny bubble">Küçük balon</h3>
+              <p data-tr="Küçük parçalar kaçıyordu. Hız ve puan birlikte artınca kovalamaca keyif oldu." data-en="The little pieces kept slipping away. Raising speed and score together made the chase the fun part.">Küçük parçalar kaçıyordu. Hız ve puan birlikte artınca kovalamaca keyif oldu.</p>
+              <b class="stamp" data-tr="Tutuldu" data-en="Kept">Tutuldu</b>
+            </article>
+            <article class="proto proto-world">
+              <p class="note-kicker" data-tr="Ortak dünya" data-en="Shared world">Ortak dünya</p>
+              <h3 data-tr="Tek kulübe" data-en="One clubhouse">Tek kulübe</h3>
+              <p data-tr="İki oyun ayrı ritimde kalır. Kazanılan deneyim aynı Firu’yu büyütür." data-en="The two games keep their own rhythm. Experience earned still grows the same Firu.">İki oyun ayrı ritimde kalır. Kazanılan deneyim aynı Firu’yu büyütür.</p>
+              <b class="stamp" data-tr="Tutuldu" data-en="Kept">Tutuldu</b>
+            </article>
+          </div>
         </div>
       </div>
     </section>
