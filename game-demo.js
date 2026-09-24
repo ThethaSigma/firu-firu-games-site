@@ -408,6 +408,8 @@
   }
 
   // Paw Jump: mobile-game physics, portrait camera, real tuning.
+  const JUMP_TUNING = { gravity: 980, normalSpeed: 580, minGap: 84, maxGap: 120, safeGapRatio: .72 };
+
   function jumpScale() {
     return width() / 400;
   }
@@ -441,7 +443,10 @@
     }
     const top = safe.reduce((a, b) => a.y < b.y ? a : b);
     const metres = s.altitude / (12 * scale);
-    const gap = clamp(70 + metres / 80, 70, 112) * scale * (.96 + Math.random() * .08);
+    const jumpHeight = JUMP_TUNING.normalSpeed ** 2 / (2 * JUMP_TUNING.gravity);
+    const safeGap = jumpHeight * JUMP_TUNING.safeGapRatio;
+    const gap = Math.min(clamp(JUMP_TUNING.minGap + metres / 95, JUMP_TUNING.minGap, JUMP_TUNING.maxGap)
+      * (.96 + Math.random() * .08), safeGap) * scale;
     const platformWidth = (56 + Math.random() * 34) * scale;
     const reach = (metres < 40 ? 125 : 150) * scale;
     const x = clamp(top.originX + (Math.random() * 2 - 1) * reach, 8, width() - platformWidth - 8);
@@ -501,7 +506,7 @@
       player: {
         x: w * .49 - 28.6 * scale, y: h - 105 * scale,
         w: 57.2 * scale, h: 57.2 * scale,
-        vx: 0, vy: -560 * scale, facing: 1, invincible: 0,
+        vx: 0, vy: -JUMP_TUNING.normalSpeed * scale, facing: 1, invincible: 0,
         squash: 0, rotation: 0
       },
       platforms,
@@ -525,7 +530,7 @@
     const s = jumpState;
     const p = s.player;
     if (s.doubleJumps <= 0 || s.effects.rocket > 0) return;
-    p.vy = -560 * jumpScale();
+    p.vy = -JUMP_TUNING.normalSpeed * jumpScale();
     p.squash = -.24;
     s.doubleJumps -= 1;
     syncJumpAction();
@@ -557,7 +562,7 @@
     s.player.x = landing.x + landing.w / 2 - s.player.w / 2;
     s.player.y = landing.y - s.player.h - 3;
     s.player.vx = 0;
-    s.player.vy = -560 * jumpScale();
+    s.player.vy = -JUMP_TUNING.normalSpeed * jumpScale();
     s.player.invincible = 1.2;
     rememberMotion(s.player); // Respawns are teleports, not a cross-screen tween.
   }
@@ -583,7 +588,7 @@
     const oldBottom = p.y + p.h;
     const oldX = p.x;
     p.x += p.vx * dt;
-    p.vy = s.effects.rocket > 0 ? -1100 * scale : Math.min(900 * scale, p.vy + 980 * scale * dt);
+    p.vy = s.effects.rocket > 0 ? -1100 * scale : Math.min(900 * scale, p.vy + JUMP_TUNING.gravity * scale * dt);
     p.y += p.vy * dt;
     p.invincible = Math.max(0, p.invincible - dt);
     p.squash += (0 - p.squash) * Math.min(1, dt * 10);
@@ -624,7 +629,7 @@
           continue;
         }
         p.y = platform.y - p.h;
-        p.vy = (platform.type === 'spring' ? -980 : -560) * scale;
+        p.vy = (platform.type === 'spring' ? -980 : -JUMP_TUNING.normalSpeed) * scale;
         p.squash = .26;
         platform.landedPulse = 1;
         s.rings.push({ x: p.x + p.w / 2, y: platform.y, radius: 13, life: .32, maxLife: .32, color: platform.type === 'spring' ? '#ffd36a' : '#e4fff5' });

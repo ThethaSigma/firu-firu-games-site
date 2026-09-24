@@ -97,9 +97,40 @@ test('Paw Jump starts with a guaranteed air jump pickup and requires a charge', 
   assert.ok(s.items.some(item => item.type === 'air'));
   s.player.vy = 200; demo.jumpAction(); assert.equal(s.player.vy, 200);
   s.doubleJumps = 1; demo.jumpAction();
-  assert.equal(s.player.vy, -560); assert.equal(s.doubleJumps, 0);
+  assert.equal(s.player.vy, -580); assert.equal(s.doubleJumps, 0);
   demo.loseJumpLife(); assert.equal(s.lives, 2);
   assert.ok(Number.isFinite(s.player.y));
+});
+
+test('Paw Jump generated platforms stay within the tuned jump height', () => {
+  const maxSafeGap = 580 ** 2 / (2 * 980) * .72;
+  for (const metres of [0, 4000]) {
+    for (let seed = 1; seed <= 10; seed++) {
+      const { demo } = harness(seed);
+      demo.setDemoDrawer(true); demo.startGame();
+      const s = demo.state().jump;
+      s.altitude = metres * 12;
+      for (let i = 0; i < 30; i++) {
+        const before = s.platforms.filter(p => p.type !== 'fake').reduce((top, p) => p.y < top.y ? p : top);
+        demo.generateJumpPlatform();
+        const after = s.platforms.filter(p => p.type !== 'fake').reduce((top, p) => p.y < top.y ? p : top);
+        const gap = before.y - after.y;
+        assert.ok(gap > 0 && gap <= maxSafeGap + 1e-7, `gap ${gap} at ${metres} m`);
+      }
+    }
+  }
+});
+
+test('a normal jump lands on a platform 120 pixels above', () => {
+  const { demo } = harness(); demo.setDemoDrawer(true); demo.startGame();
+  const s = demo.state().jump;
+  const lower = demo.makePlatform(140, 520, 90);
+  const upper = demo.makePlatform(140, 400, 90);
+  s.platforms = [lower, upper]; s.items = [];
+  Object.assign(s.player, { x: 150, y: lower.y - s.player.h, vx: 0, vy: -580 });
+  for (let i = 0; i < 90 && s.landings === 0; i++) demo.updateJump(1 / 60);
+  assert.equal(s.landings, 1);
+  assert.equal(upper.landedPulse, 1);
 });
 
 test('Paw Jump survives an extended no-input run without invalid coordinates', () => {
@@ -316,7 +347,7 @@ test('rocket preserves steering and air-jump charges, then makes a soft exit', (
   window.emit('keyup', { key: 'ArrowRight' });
   for (let i = 0; i < 132; i++) { s.items = []; demo.updateJump(1 / 60); }
   assert.equal(s.effects.rocket, 0);
-  assert.ok(s.player.vy < 0 && s.player.vy > -560);
+  assert.ok(s.player.vy < 0 && s.player.vy > -580);
   assert.ok(s.player.y > 0 && s.player.y < 700);
   demo.startGame(); assert.equal(demo.state().jump.effects.rocket, 0);
 });
