@@ -51,6 +51,7 @@ function harness(seed = 12345) {
     startGame, pauseGame, activateOverlay, setDemoDrawer, selectGame, resizeCanvas,
     updateJump, updateBubblePaws, splitBubble, fireHarpoon, loseJumpLife, jumpAction,
     makePlatform, generateJumpPlatform, breakJumpPlatform, platformArt, loseBubbleLife, makeBubble,
+    activatePower, tickEffects, rememberMotion, renderMotion, loop, draw,
     state: () => ({ game, running, paused, score, bubbleLevel, overlayMode,
       jump: jumpState, bubble: bubbleState, keys, heldFire })
   };})();`);
@@ -279,6 +280,115 @@ test('respawn protection prevents multiple life losses in the same contact', () 
   const s = demo.state().bubble; s.grace = 0;
   demo.loseBubbleLife(); demo.loseBubbleLife();
   assert.equal(s.lives, 4); assert.ok(s.player.invincible > 0);
+});
+
+test('Paw Jump introduces both new powers and collects a timed pickup on contact', () => {
+  const { demo } = harness(); demo.setDemoDrawer(true); demo.startGame();
+  const s = demo.state().jump;
+  assert.ok(s.items.some(item => item.type === 'magnet'));
+  assert.ok(s.items.some(item => item.type === 'rocket'));
+  s.items = [{ type: 'magnet', x: s.player.x + 10, y: s.player.y + 10, w: 36, h: 36, phase: 0 }];
+  demo.updateJump(1 / 60);
+  assert.equal(s.items.length, 0); assert.equal(s.effects.magnet, 5);
+});
+
+test('magnet detaches and pulls only nearby bones, then expires', () => {
+  const { demo } = harness(); demo.setDemoDrawer(true); demo.startGame();
+  const s = demo.state().jump;
+  Object.assign(s.player, { x: 100, y: 400, vx: 0, vy: 0 });
+  const platform = demo.makePlatform(180, 465, 100);
+  const near = { type: 'bone', platform, x: 218, y: 416, w: 24, h: 24, phase: 0 };
+  const far = { type: 'bone', x: 350, y: 416, w: 24, h: 24, phase: 0 };
+  s.items = [near, far];
+  demo.activatePower(s, 'magnet', 100, 400);
+  demo.updateJump(1 / 60);
+  assert.equal(near.platform, null); assert.ok(near.x < 218); assert.equal(far.x, 350);
+  demo.tickEffects(s, 5); assert.equal(s.effects.magnet, 0);
+});
+
+test('rocket preserves steering and air-jump charges, then makes a soft exit', () => {
+  const { demo, window } = harness(); demo.setDemoDrawer(true); demo.startGame();
+  const s = demo.state().jump; s.items = []; s.doubleJumps = 1;
+  demo.activatePower(s, 'rocket', s.player.x, s.player.y);
+  demo.jumpAction(); assert.equal(s.doubleJumps, 1);
+  window.emit('keydown', { key: 'ArrowRight' }); demo.updateJump(1 / 60);
+  assert.equal(s.player.vy, -1100); assert.ok(s.player.vx > 0);
+  window.emit('keyup', { key: 'ArrowRight' });
+  for (let i = 0; i < 132; i++) { s.items = []; demo.updateJump(1 / 60); }
+  assert.equal(s.effects.rocket, 0);
+  assert.ok(s.player.vy < 0 && s.player.vy > -560);
+  assert.ok(s.player.y > 0 && s.player.y < 700);
+  demo.startGame(); assert.equal(demo.state().jump.effects.rocket, 0);
+});
+
+test('Bubble Paws drops a power early, catches it, and refreshes without stacking', () => {
+  const { demo } = harness(); demo.selectGame('pop'); demo.setDemoDrawer(true); demo.startGame();
+  const s = demo.state().bubble;
+  demo.splitBubble(0); assert.equal(s.pickups.length, 1); assert.equal(s.pickups[0].type, 'wide');
+  Object.assign(s.pickups[0], { x: s.player.x + 12, y: s.player.y + 12 });
+  demo.updateBubblePaws(1 / 60); assert.equal(s.pickups.length, 0); assert.equal(s.effects.wide, 8);
+  demo.tickEffects(s, 2); demo.activatePower(s, 'wide', 100, 100);
+  assert.equal(s.effects.wide, 8);
+  demo.pauseGame(); demo.loop(50000); assert.equal(s.effects.wide, 8);
+  demo.activateOverlay(); demo.startGame(); assert.equal(demo.state().bubble.effects.wide, 0);
+});
+
+test('wide harpoons hit across their full width and break wood with one shot', () => {
+  function scenario(wide) {
+    const { demo } = harness(); demo.selectGame('pop'); demo.setDemoDrawer(true); demo.startGame();
+    const s = demo.state().bubble;
+    s.bubbles = [Object.assign(demo.makeBubble(300, 200, 3), { vx: 0, vy: 0, wood: true, hp: 2 })];
+    s.harpoons = [{ x: 318, topY: 195, baseY: 309, radius: wide ? 12 : 6, damage: wide ? 2 : 1, wide }];
+    demo.updateBubblePaws(1 / 60);
+    return s;
+  }
+  assert.equal(scenario(false).bubbles[0].hp, 2);
+  assert.equal(scenario(true).bubbles.length, 0);
+});
+
+test('the full width of a wide harpoon is blocked by an obstacle edge', () => {
+  const { demo } = harness(); demo.selectGame('pop'); demo.setDemoDrawer(true); demo.startGame();
+  const s = demo.state().bubble;
+  s.obstacles = [{ x: 200, y: 200, w: 120, h: 14 }];
+  s.bubbles = [Object.assign(demo.makeBubble(194, 150, 3), { vx: 0, vy: 0 })];
+  s.harpoons = [{ x: 194, topY: 140, baseY: 309, radius: 12, damage: 2, wide: true }];
+  demo.updateBubblePaws(1 / 60);
+  assert.equal(s.bubbles.length, 1); assert.equal(s.harpoons.length, 0);
+});
+
+test('slow power scales only bubble motion, not player, harpoon or countdown', () => {
+  function scenario(slow) {
+    const { demo, window } = harness(); demo.selectGame('pop'); demo.setDemoDrawer(true); demo.startGame();
+    const s = demo.state().bubble;
+    s.bubbles = [Object.assign(demo.makeBubble(120, 160, 2), { vx: 100, vy: 0 })];
+    s.effects.slow = slow ? 6 : 0;
+    window.emit('keydown', { key: 'ArrowRight' }); demo.fireHarpoon(); demo.updateBubblePaws(1 / 60);
+    return s;
+  }
+  const normal = scenario(false), slowed = scenario(true);
+  assert.ok(Math.abs((slowed.bubbles[0].x - 120) / (normal.bubbles[0].x - 120) - .45) < 1e-9);
+  assert.equal(slowed.player.x, normal.player.x);
+  assert.equal(slowed.harpoons[0].topY, normal.harpoons[0].topY);
+  assert.equal(slowed.remaining, normal.remaining);
+});
+
+test('render interpolation fills intermediate frames without mutating simulation', () => {
+  const { demo } = harness(); const body = { x: 0, y: 100, rotation: 0, squash: 0 };
+  demo.rememberMotion(body); body.x = 20; body.y = 120;
+  const view = demo.renderMotion(body, .25);
+  assert.equal(view.x, 5); assert.equal(view.y, 105); assert.equal(body.x, 20);
+});
+
+test('30, 60 and 120 Hz rendering produce the same timed simulation', () => {
+  function at(fps) {
+    const { demo, window } = harness(); demo.selectGame('pop'); demo.setDemoDrawer(true); demo.startGame();
+    window.emit('keydown', { key: 'ArrowRight' });
+    for (let frame = 1; frame <= fps * 2; frame++) demo.loop(frame * 1000 / fps);
+    const s = demo.state().bubble;
+    return [s.player.x, s.bubbles[0].x, s.bubbles[0].y, s.remaining];
+  }
+  const base = at(60);
+  for (const fps of [30, 120]) at(fps).forEach((value, i) => assert.ok(Math.abs(value - base[i]) < 1e-7, `${fps} Hz, field ${i}: ${value} vs ${base[i]}`));
 });
 
 test('every declared game asset exists locally', () => {

@@ -43,6 +43,11 @@
     spring: image('assets/platform_spring.webp'),
     bone: image('assets/collectible_bone.webp'),
     airJump: image('assets/powerup_air_jump.webp'),
+    magnet: image('assets/powerup_magnet.webp'),
+    rocket: image('assets/powerup_rocket.webp'),
+    rocketActive: image('assets/rocket_active.webp'),
+    wide: image('assets/wide_harpoon.webp'),
+    slow: image('assets/slow_bubbles.webp'),
     bubbleBg: image('assets/bubble_paws_bg.webp'),
     bubbleIdle: image('assets/bubble_paws_firu.webp'),
     bubbleShoot: image('assets/bubble_paws_shoot.png'),
@@ -61,7 +66,9 @@
     pop: 'assets/sfx_pop.mp3',
     popLarge: 'assets/sfx_pop_large.mp3',
     hit: 'assets/sfx_hit.mp3',
-    clear: 'assets/sfx_clear.mp3'
+    clear: 'assets/sfx_clear.mp3',
+    jumpPower: 'assets/powerup_collect.mp3',
+    bubblePower: 'assets/power_up_collect.mp3'
   };
   const audioBank = Object.fromEntries(Object.entries(audioSources).map(([name, src]) => {
     const audio = new Audio(src);
@@ -74,20 +81,21 @@
       score: 'SKOR', best: 'REKOR', start: 'Oyunu başlat', retry: 'Tekrar dene', oneMore: 'Bir tur daha',
       left: '← SOL', right: 'SAĞ →', doubleJump: 'ÇİFT ZIPLA', fire: 'ATEŞ', seconds: 'sn', combo: 'KOMBO',
       bubbles: 'BALON', level: 'BÖLÜM', timeUpTitle: 'Süre doldu',
+      magnet: 'MIKNATIS', rocket: 'ROKET', wide: 'GENİŞ ZIPKIN', slow: 'YAVAŞLATMA',
       pause: 'Duraklat', resume: 'Devam et', paused: 'Küçük bir mola.',
       pauseText: 'Hazır olduğunda kaldığın yerden devam et.',
       mute: 'Sesi kapat', unmute: 'Sesi aç', next: 'Sonraki bölüm',
       complete: 'Üç bölüm, kocaman bir alkış!',
       completeText: points => `Demo tamamlandı. ${points} puan! 50 bölümün tamamı mobil uygulamada seni bekliyor.`,
       jumpKicker: 'SONSUZ TIRMANIŞ', popKicker: '3 BÖLÜMLÜK MACERA',
-      jumpTip: 'Mavi çatlak taşlar kırılır, zıplatmaz. Sağlam yolu izle; mor güç simgesiyle düşerken de çift zıplayabilirsin.',
-      popTip: 'ATEŞ tuşunu basılı tutarak art arda ateş edebilirsin. Ahşap balonlar iki isabet ister.',
+      jumpTip: 'Mıknatıs 5 sn kemikleri çeker; roket 2,2 sn yükseltir. Uçarken yön verebilirsin. Çatlak taşlar tutmaz; mor simge çift zıplama verir.',
+      popTip: 'Düşen simgeleri topla: yavaşlatma 6 sn sürer, geniş zıpkın 8 sn boyunca ahşabı tek atışta kırar. ATEŞ tuşunu basılı tutabilirsin.',
       jumpGuide: 'Her iniş yeni bir başlangıç. Kemikleri topla, hareketli platformları takip et ve rekorunu yükselt.',
       popGuide: 'Üç farklı bölüm: balonları parçala, engellerin etrafından dolaş, ahşap balonları kır.',
       goodJump: 'TEMİZ İNİŞ!', rescue: 'BİR ŞANS DAHA',
       cracked: 'ÇATLAK PLATFORM!', saveJump: 'ÇİFT ZIPLA, KURTUL!', woodCrack: 'BİR İSABET DAHA!',
-      jumpIntro: 'Sol ya da sağa basılı tut. Firu düşünce kendiliğinden seker. Çift zıplama ikonu alınca, düşerken de çalışır. Çatlak platform tutmaz.',
-      bubbleIntro: 'Sol ya da sağa basılı tut. ATEŞ zıpkını dümdüz yukarı yollar. Büyük balon ikiye bölünür; en küçük parça yok olur.',
+      jumpIntro: 'Sağa/sola basılı tut; Firu otomatik zıplar. Mor simge çift zıplama verir. Mıknatıs kemikleri çeker, roket yükseltir. Çatlak taşlara dikkat.',
+      bubbleIntro: 'Sağa/sola basılı tut, ATEŞ ile balonları böl. Düşen güç simgelerini yakala: geniş zıpkın ahşabı kırar, yavaşlatma balonları ağırlaştırır.',
       jumpEndTitle: 'Paw Jump turu bitti',
       jumpEnd: (metres, bones) => `${metres} metreye çıktın ve ${bones} kemik topladın.`,
       clearTitle: 'Bölüm temiz!',
@@ -100,20 +108,21 @@
       score: 'SCORE', best: 'BEST', start: 'Start game', retry: 'Try again', oneMore: 'One more run',
       left: '← LEFT', right: 'RIGHT →', doubleJump: 'DOUBLE JUMP', fire: 'FIRE', seconds: 's', combo: 'COMBO',
       bubbles: 'BUBBLES', level: 'LEVEL', timeUpTitle: 'Time up',
+      magnet: 'MAGNET', rocket: 'ROCKET', wide: 'WIDE HARPOON', slow: 'SLOW BUBBLES',
       pause: 'Pause', resume: 'Resume', paused: 'Take a breath.',
       pauseText: 'Your adventure will be right here when you are ready.',
       mute: 'Mute sound', unmute: 'Enable sound', next: 'Next level',
       complete: 'Three levels. Well played!',
       completeText: points => `Demo complete. ${points} points! All 50 levels are waiting in the mobile app.`,
       jumpKicker: 'ENDLESS CLIMB', popKicker: 'A THREE-LEVEL ADVENTURE',
-      jumpTip: 'Blue cracked stones break without a bounce. Follow the solid route; the purple pickup lets you double jump even while falling.',
-      popTip: 'Hold FIRE to keep shooting. Wooden bubbles take two hits.',
+      jumpTip: 'The magnet pulls bones for 5 s; the rocket lifts you for 2.2 s. Keep steering in flight. Cracked stones break; purple pickups grant double jumps.',
+      popTip: 'Catch falling pickups: slow bubbles for 6 s, or a wide harpoon for 8 s that breaks wood in one hit. Hold FIRE to keep shooting.',
       jumpGuide: 'Every landing is a new beginning. Collect bones, follow moving platforms, and beat your best.',
       popGuide: 'Three different levels: split bubbles, move around obstacles, and break wooden bubbles.',
       goodJump: 'PERFECT LANDING!', rescue: 'ONE MORE CHANCE',
       cracked: 'CRACKED PLATFORM!', saveJump: 'DOUBLE JUMP TO RECOVER!', woodCrack: 'ONE MORE HIT!',
-      jumpIntro: 'Hold left or right. Firu bounces on landing. Double jump works even while falling, once you collect the icon. Cracked platforms do not hold.',
-      bubbleIntro: 'Hold left or right. FIRE sends the harpoon straight up. A large bubble splits in two until the smallest piece pops.',
+      jumpIntro: 'Hold left/right; Firu jumps automatically. Purple pickups grant double jumps. Magnets pull bones; rockets boost you upward. Watch for cracked stones.',
+      bubbleIntro: 'Hold left/right and FIRE to split bubbles. Catch falling powers: wide harpoons break wood; slow pickups reduce bubble speed.',
       jumpEndTitle: 'Paw Jump run over',
       jumpEnd: (metres, bones) => `You climbed ${metres} metres and collected ${bones} bones.`,
       clearTitle: 'Level clear!',
@@ -131,6 +140,12 @@
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const overlaps = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
   const FIXED_STEP = 1 / 60;
+  const POWER_UPS = {
+    magnet: { duration: 5, color: '#f6a8da' },
+    rocket: { duration: 2.2, color: '#ffcc71' },
+    wide: { duration: 8, color: '#c6a6ff' },
+    slow: { duration: 6, color: '#90edee' }
+  };
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
 
   let game = 'jump';
@@ -158,10 +173,59 @@
   function syncJumpAction() {
     const charges = jumpState ? jumpState.doubleJumps : 0;
     actionBtn.textContent = `${copy().doubleJump} ×${charges}`;
-    actionBtn.style.opacity = game === 'jump' && charges <= 0 ? '.42' : '1';
+    actionBtn.style.opacity = game === 'jump' && (charges <= 0 || jumpState?.effects.rocket > 0) ? '.42' : '1';
   }
   let jumpState = null;
   let bubbleState = null;
+
+  // Interpolate only the presentation. Collision/score simulation stays at 60 Hz.
+  function rememberMotion(entity) {
+    entity.previous = { x: entity.x, y: entity.y, topY: entity.topY, rotation: entity.rotation, squash: entity.squash };
+  }
+
+  function renderMotion(entity, alpha = 1) {
+    if (!entity.previous || alpha >= 1) return entity;
+    const view = { ...entity };
+    for (const key of ['x', 'y', 'topY', 'rotation', 'squash']) {
+      const before = entity.previous[key], now = entity[key];
+      if (Number.isFinite(before) && Number.isFinite(now)) view[key] = before + (now - before) * alpha;
+    }
+    return view;
+  }
+
+  function tickEffects(state, dt) {
+    for (const name of Object.keys(state.effects)) state.effects[name] = Math.max(0, state.effects[name] - dt);
+  }
+
+  function activatePower(state, name, x, y) {
+    const power = POWER_UPS[name];
+    if (!power) return;
+    state.effects[name] = power.duration; // Refresh, never stack to an unlimited duration.
+    spawnParticles(state.particles, x, y, [power.color, '#ffffff'], 16, 100);
+    state.rings.push({ x, y, radius: 16, life: .45, maxLife: .45, color: power.color });
+    if (game === 'jump') {
+      state.toast = copy()[name]; state.toastTime = 1.3;
+      if (name === 'rocket') { state.player.vy = -1100; state.player.squash = -.15; }
+      syncJumpAction();
+    } else addFloatingScore(state, x, y - 15, copy()[name], power.color);
+    playSfx(game === 'jump' ? 'jumpPower' : 'bubblePower', .22);
+  }
+
+  function drawPowerTimers(state, y) {
+    let x = 10;
+    for (const [name, remaining] of Object.entries(state.effects)) {
+      if (remaining <= 0) continue;
+      const power = POWER_UPS[name], w = game === 'jump' ? 184 : 174;
+      ctx.save();
+      ctx.fillStyle = '#101d35ed'; ctx.beginPath(); ctx.roundRect(x, y, w, 32, 10); ctx.fill();
+      drawSprite(art[name], x + 5, y + 3, 25, 25);
+      ctx.font = '800 11px Nunito, sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText(`${copy()[name]} ${Math.ceil(remaining)}${copy().seconds}`, x + 35, y + 17);
+      ctx.fillStyle = '#ffffff26'; ctx.fillRect(x + 35, y + 23, w - 45, 3);
+      ctx.fillStyle = power.color; ctx.fillRect(x + 35, y + 23, (w - 45) * remaining / power.duration, 3);
+      ctx.restore(); x += w + 7;
+    }
+  }
 
   function playSfx(name, volume = .18, playbackRate = 1) {
     const source = audioBank[name];
@@ -315,8 +379,9 @@
     }
   }
 
-  function drawParticles(list) {
-    for (const particle of list) {
+  function drawParticles(list, alpha = 1) {
+    for (const current of list) {
+      const particle = renderMotion(current, alpha);
       ctx.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
       ctx.fillStyle = particle.color;
       ctx.beginPath();
@@ -331,9 +396,10 @@
     for (let i = list.length - 1; i >= 0; i--) if (list[i].life <= 0) list.splice(i, 1);
   }
 
-  function drawRings(list) {
+  function drawRings(list, alpha = 1) {
     ctx.save(); ctx.lineWidth = 2;
-    for (const ring of list) {
+    for (const current of list) {
+      const ring = renderMotion(current, alpha);
       ctx.globalAlpha = clamp(ring.life / ring.maxLife, 0, 1);
       ctx.strokeStyle = ring.color; ctx.beginPath();
       ctx.ellipse(ring.x, ring.y, ring.radius, ring.radius * .38, 0, 0, Math.PI * 2); ctx.stroke();
@@ -356,14 +422,13 @@
     };
   }
 
-  function addJumpItem(platform) {
+  function addJumpItem(platform, forcedType = null) {
     if (platform.type === 'fake' || platform.broken) return;
     const roll = Math.random();
-    if (roll < .10) {
-      jumpState.items.push({ type: 'air', platform, x: platform.x + platform.w / 2 - 18 * jumpScale(), y: platform.y - 45 * jumpScale(), w: 36 * jumpScale(), h: 36 * jumpScale(), phase: Math.random() * 6 });
-    } else if (roll < .43) {
-      jumpState.items.push({ type: 'bone', platform, x: platform.x + platform.w / 2 - 12 * jumpScale(), y: platform.y - 31 * jumpScale(), w: 24 * jumpScale(), h: 24 * jumpScale(), phase: Math.random() * 6 });
-    }
+    const type = forcedType || (roll < .04 ? 'magnet' : roll < .08 ? 'rocket' : roll < .18 ? 'air' : roll < .52 ? 'bone' : null);
+    if (!type) return;
+    const size = type === 'bone' ? 24 : 36;
+    jumpState.items.push({ type, platform, x: platform.x + platform.w / 2 - size / 2, y: platform.y - size - 9, w: size, h: size, phase: Math.random() * 6 });
   }
 
   function generateJumpPlatform() {
@@ -441,12 +506,14 @@
       },
       platforms,
       items: [], particles: [], debris: [], rings: [], altitude: 0, bones: 0, landings: 0,
-      bonusScore: 0, lives: 3, doubleJumps: 0, combo: 0, shake: 0, elapsed: 0, toast: '', toastTime: 0, trail: []
+      bonusScore: 0, lives: 3, doubleJumps: 0, combo: 0, shake: 0, elapsed: 0, toast: '', toastTime: 0, trail: [],
+      effects: { magnet: 0, rocket: 0 }
     };
-    platforms.slice(1).forEach(addJumpItem);
-    const first = platforms[1];
-    jumpState.items = jumpState.items.filter(item => item.platform !== first);
-    jumpState.items.push({ type: 'air', platform: first, x: first.x + first.w / 2 - 18, y: first.y - 45, w: 36, h: 36, phase: 0 });
+    // A short demo should introduce its powers without depending on lucky rolls.
+    addJumpItem(platforms[1], 'air');
+    addJumpItem(platforms[2], 'magnet');
+    addJumpItem(platforms[3], 'bone');
+    addJumpItem(platforms[4], 'rocket');
     while (jumpState.platforms.reduce((min, p) => Math.min(min, p.y), h) > -110) generateJumpPlatform();
     syncJumpAction();
     updateScoreline(' · 0 m');
@@ -457,7 +524,7 @@
     if (!running || game !== 'jump' || !jumpState) return;
     const s = jumpState;
     const p = s.player;
-    if (s.doubleJumps <= 0) return;
+    if (s.doubleJumps <= 0 || s.effects.rocket > 0) return;
     p.vy = -560 * jumpScale();
     p.squash = -.24;
     s.doubleJumps -= 1;
@@ -468,6 +535,8 @@
 
   function loseJumpLife() {
     const s = jumpState;
+    s.effects.magnet = s.effects.rocket = 0;
+    syncJumpAction();
     s.lives -= 1;
     s.shake = 10;
     playSfx('hit', .2);
@@ -490,12 +559,18 @@
     s.player.vx = 0;
     s.player.vy = -560 * jumpScale();
     s.player.invincible = 1.2;
+    rememberMotion(s.player); // Respawns are teleports, not a cross-screen tween.
   }
 
   function updateJump(dt) {
     const s = jumpState;
     const p = s.player;
     const scale = jumpScale();
+    rememberMotion(p);
+    for (const entity of [...s.platforms, ...s.items, ...s.particles, ...s.debris, ...s.rings, ...s.trail]) rememberMotion(entity);
+    const wasRocket = s.effects.rocket > 0;
+    tickEffects(s, dt);
+    if (wasRocket && s.effects.rocket <= 0) { p.vy = -350 * scale; syncJumpAction(); }
     const direction = steer();
     const target = direction * 260 * scale;
     const reversing = direction && p.vx !== 0 && Math.sign(target) !== Math.sign(p.vx);
@@ -508,7 +583,7 @@
     const oldBottom = p.y + p.h;
     const oldX = p.x;
     p.x += p.vx * dt;
-    p.vy = Math.min(900 * scale, p.vy + 980 * scale * dt);
+    p.vy = s.effects.rocket > 0 ? -1100 * scale : Math.min(900 * scale, p.vy + 980 * scale * dt);
     p.y += p.vy * dt;
     p.invincible = Math.max(0, p.invincible - dt);
     p.squash += (0 - p.squash) * Math.min(1, dt * 10);
@@ -526,8 +601,8 @@
     s.debris = s.debris.filter(piece => piece.life > 0);
     updateRings(s.rings, dt);
 
-    if (p.x + p.w < 0) p.x = width();
-    if (p.x > width()) p.x = -p.w;
+    if (p.x + p.w < 0) { p.x = width(); rememberMotion(p); }
+    if (p.x > width()) { p.x = -p.w; rememberMotion(p); }
 
     for (const platform of s.platforms) {
       platform.landedPulse = Math.max(0, platform.landedPulse - dt * 4.5);
@@ -570,6 +645,16 @@
       const item = s.items[i];
       item.phase += dt * 2.4;
       if (item.platform) item.x = item.platform.x + item.platform.w / 2 - item.w / 2;
+      if (item.type === 'bone' && s.effects.magnet > 0) {
+        const dx = p.x + p.w / 2 - item.x - item.w / 2;
+        const dy = p.y + p.h / 2 - item.y - item.h / 2;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 140 * scale) {
+          item.platform = null;
+          const pull = Math.min(1, 320 * scale * dt / Math.max(1, distance));
+          item.x += dx * pull; item.y += dy * pull;
+        }
+      }
       const pickup = { x: item.x + item.w * .15, y: item.y + item.h * .15, w: item.w * .7, h: item.h * .7 };
       const playerPickup = { x: p.x + p.w * .25, y: p.y + p.h * .2, w: p.w * .5, h: p.h * .68 };
       if (overlaps(playerPickup, pickup)) {
@@ -578,12 +663,14 @@
           s.bonusScore += 25;
           spawnParticles(s.particles, item.x + item.w / 2, item.y + item.h / 2, ['#ffd166', '#fff2a8'], 10, 90 * scale);
           playSfx('bone', .18);
-        } else {
+        } else if (item.type === 'air') {
           s.doubleJumps = Math.min(3, s.doubleJumps + 1);
           s.toast = copy().doubleJump + ' +1'; s.toastTime = 1.4;
           syncJumpAction();
           spawnParticles(s.particles, item.x + item.w / 2, item.y + item.h / 2, ['#78f2ff', '#9c8cff', '#ffffff'], 15, 110 * scale);
           playSfx('doubleJump', .20);
+        } else {
+          activatePower(s, item.type, item.x + item.w / 2, item.y + item.h / 2);
         }
         s.items.splice(i, 1);
       }
@@ -593,7 +680,9 @@
     const pressureSpeed = (55 + clamp(metres / 4000, 0, 1) * 155) * scale * Math.min(1, s.elapsed / 2);
     let cameraShift = pressureSpeed * dt;
     const followLine = height() * .50;
-    if (p.y < followLine) cameraShift += followLine - p.y;
+    // Smooth pursuit, with a quicker catch-up during springs and rocket flight.
+    const followTime = s.effects.rocket > 0 || p.y < height() * .42 ? .065 : .14;
+    if (p.y < followLine) cameraShift += (followLine - p.y) * (1 - Math.exp(-dt / followTime));
     if (cameraShift > 0) {
       p.y += cameraShift;
       s.altitude += cameraShift;
@@ -625,7 +714,8 @@
   }
 
   function drawJumpPlayer(player) {
-    const sprite = player.vy < 35 * jumpScale() ? art.jumpUp : art.jumpDown;
+    const rocket = jumpState.effects.rocket > 0;
+    const sprite = rocket ? art.rocketActive : player.vy < 35 * jumpScale() ? art.jumpUp : art.jumpDown;
     const alpha = player.invincible > 0 && Math.floor(player.invincible * 12) % 2 ? .32 : 1;
     const stretch = clamp(-player.vy / (900 * jumpScale()), -.45, .45);
     const scaleX = 1 - stretch * .08 + player.squash * .22;
@@ -645,7 +735,7 @@
     ctx.restore();
   }
 
-  function drawJump() {
+  function drawJump(alpha = 1) {
     const w = width();
     const h = height();
     const s = jumpState;
@@ -658,11 +748,12 @@
     ctx.fillRect(0, 0, w, h);
     if (!s) return;
 
-    const shakeX = reducedMotion ? 0 : (Math.random() - .5) * s.shake;
-    const shakeY = reducedMotion ? 0 : (Math.random() - .5) * s.shake;
+    const shakeX = reducedMotion ? 0 : Math.sin((s.elapsed + alpha * FIXED_STEP) * 113) * s.shake * .5;
+    const shakeY = reducedMotion ? 0 : Math.cos((s.elapsed + alpha * FIXED_STEP) * 151) * s.shake * .5;
     ctx.save();
     ctx.translate(shakeX, shakeY);
-    for (const platform of s.platforms) {
+    for (const current of s.platforms) {
+      const platform = renderMotion(current, alpha);
       const pulse = platform.landedPulse * 3 * jumpScale();
       ctx.fillStyle = 'rgba(7,28,48,.20)';
       ctx.beginPath();
@@ -684,7 +775,8 @@
         ctx.fillText('!', platform.x + platform.w / 2, platform.y - 10); ctx.restore();
       }
     }
-    for (const piece of s.debris) {
+    for (const current of s.debris) {
+      const piece = renderMotion(current, alpha);
       ctx.save(); ctx.translate(piece.x, piece.y); ctx.rotate(piece.angle);
       ctx.globalAlpha = Math.min(1, piece.life / .2);
       if (art.platformCracked.complete && art.platformCracked.naturalWidth) {
@@ -693,31 +785,39 @@
       } else { ctx.fillStyle = '#9fbec8'; ctx.fillRect(-piece.w / 2, -5, piece.w, 10); }
       ctx.restore();
     }
-    drawRings(s.rings);
-    for (const item of s.items) {
+    drawRings(s.rings, alpha);
+    for (const current of s.items) {
+      const item = renderMotion(current, alpha);
       const bob = Math.sin(item.phase * 3) * 3 * jumpScale();
       ctx.fillStyle = item.type === 'bone' ? 'rgba(255,218,104,.24)' : 'rgba(114,232,255,.25)';
       ctx.beginPath();
       ctx.arc(item.x + item.w / 2, item.y + item.h / 2 + bob, item.w * .68, 0, Math.PI * 2);
       ctx.fill();
-      drawSprite(item.type === 'bone' ? art.bone : art.airJump, item.x, item.y + bob, item.w, item.h);
+      drawSprite(item.type === 'bone' ? art.bone : item.type === 'air' ? art.airJump : art[item.type], item.x, item.y + bob, item.w, item.h);
     }
-    for (const point of s.trail) {
+    for (const current of s.trail) {
+      const point = renderMotion(current, alpha);
       ctx.fillStyle = `rgba(255,220,135,${point.life * 1.2})`;
       ctx.beginPath(); ctx.arc(point.x, point.y, 14 * point.life / .25, 0, Math.PI * 2); ctx.fill();
     }
-    drawParticles(s.particles);
-    drawJumpPlayer(s.player);
+    drawParticles(s.particles, alpha);
+    const player = renderMotion(s.player, alpha);
+    if (s.effects.magnet > 0) {
+      ctx.save(); ctx.strokeStyle = '#ffa4dd'; ctx.globalAlpha = .35; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(player.x + player.w / 2, player.y + player.h / 2, 46 + Math.sin(s.elapsed * 5) * 3, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+    drawJumpPlayer(player);
     ctx.restore();
 
     let hudX = 10;
     hudX += drawHudPill(`♥ ${s.lives}`, hudX, 10, '#d74755') + 6;
     hudX += drawHudPill(`${Math.floor(s.altitude / (12 * jumpScale()))} m`, hudX, 10, '#174c72') + 6;
     if (s.toastTime > 0) {
-      ctx.save(); ctx.globalAlpha = Math.min(1, s.toastTime * 2); ctx.font = '900 17px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#193660'; ctx.lineWidth = 4; ctx.strokeText(s.toast, w / 2, 85); ctx.fillText(s.toast, w / 2, 85); ctx.restore();
+      ctx.save(); ctx.globalAlpha = Math.min(1, s.toastTime * 2); ctx.font = '900 17px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#193660'; ctx.lineWidth = 4; ctx.strokeText(s.toast, w / 2, 122); ctx.fillText(s.toast, w / 2, 122); ctx.restore();
     }
     drawHudPill('◆ ' + s.bones, w - 68, 10, '#8a641f');
-    if (s.combo >= 5) drawHudPill(`${copy().combo} ×${1 + Math.min(3, Math.floor(s.combo / 5)) * .5}`, 10, 46, '#7d4cc4');
+    drawPowerTimers(s, 46);
+    if (s.combo >= 5) drawHudPill(`${copy().combo} ×${1 + Math.min(3, Math.floor(s.combo / 5)) * .5}`, 10, 82, '#7d4cc4');
   }
 
   // Bubble Paws: faithful level-one split chain and tuning.
@@ -762,13 +862,14 @@
       player: {
         x: w / 2 - 27 * scale, y: h - (32 + 62) * scale,
         w: 54 * scale, h: 62 * scale,
-        vx: 0, facing: 1, invincible: 0, shootPose: 0, walkTime: 0
+        vx: 0, facing: 1, invincible: 0, shootPose: 0, walkTime: 0, walkBlend: 0, shootBlend: 0
       },
       bubbles: level.spawns.map(([x, stage, dir, wood], i) => Object.assign(makeBubble(w * x, (82 + i * 25) * scale, stage, dir, i), { wood, hp: wood ? 2 : 1 })),
       obstacles: level.obstacles.map(o => ({ ...o })),
       harpoons: [], particles: [], floats: [], rings: [], lives: keepProgress ? previousLives : 5, remaining: level.time,
       shootCooldown: 0, hits: 0, combo: 0, comboTimer: 0,
-      grace: 1.6, shake: 0, flash: 0, clearDelay: 0, elapsed: 0, fireBuffer: 0
+      grace: 1.6, shake: 0, flash: 0, clearDelay: 0, elapsed: 0, fireBuffer: 0,
+      effects: { wide: 0, slow: 0 }, pickups: [], pops: 0, powerDrops: 0, nextPowerAt: 1
     };
     actionBtn.textContent = copy().fire;
     actionBtn.style.opacity = '1';
@@ -785,7 +886,8 @@
     s.fireBuffer = 0;
     const p = s.player;
     const baseY = p.y + 3 * bubbleScale();
-    s.harpoons.push({ x: p.x + p.w / 2, topY: baseY - 9 * bubbleScale(), baseY });
+    const wide = s.effects.wide > 0;
+    s.harpoons.push({ x: p.x + p.w / 2, topY: baseY - 9 * bubbleScale(), baseY, radius: wide ? 12 : 6, damage: wide ? 2 : 1, wide });
     s.shootCooldown = .22;
     p.shootPose = .18;
     spawnParticles(s.particles, p.x + p.w / 2, baseY, ['#fff2b1', '#ffffff'], 4, 35);
@@ -796,12 +898,12 @@
     s.floats.push({ x, y, text, color, life: .85 });
   }
 
-  function splitBubble(index) {
+  function splitBubble(index, damage = 1) {
     const s = bubbleState;
     const bubble = s.bubbles[index];
     s.hits += 1;
-    if (bubble.wood && bubble.hp > 1) {
-      bubble.hp -= 1; bubble.impact = 1; s.shake = 3;
+    if (bubble.wood && bubble.hp > damage) {
+      bubble.hp -= damage; bubble.impact = 1; s.shake = 3;
       spawnParticles(s.particles, bubble.x, bubble.y, ['#ca9248', '#ffdf91'], 10, 110);
       playSfx('popLarge', .18, .75);
       addFloatingScore(s, bubble.x, bubble.y - bubble.r, copy().woodCrack, '#ffe1a0');
@@ -809,6 +911,7 @@
     }
     const spec = BUBBLE_SPECS[bubble.stage];
     s.bubbles.splice(index, 1);
+    s.pops += 1;
     s.combo = s.comboTimer > 0 ? s.combo + 1 : 1;
     s.comboTimer = 1.55;
     const multiplier = 1 + Math.min(3, Math.floor((s.combo - 1) / 3)) * .5;
@@ -838,6 +941,12 @@
       s.bubbles.push(left, right);
     }
     if (!s.bubbles.length) s.clearDelay = .62;
+    else if (s.pops >= s.nextPowerAt) {
+      // An early drop teaches the feature; subsequent drops stay sparse and alternate.
+      const type = s.powerDrops % 2 === 0 ? 'wide' : 'slow';
+      s.pickups.push({ type, x: clamp(bubble.x - 14, 6, width() - 34), y: clamp(bubble.y - 14, 48, height() - 64), w: 28, h: 28, life: 9, phase: 0 });
+      s.powerDrops += 1; s.nextPowerAt = s.pops + 4 + Math.floor(Math.random() * 3);
+    }
   }
 
   function capsuleBubbleHit(bubble, player) {
@@ -869,6 +978,7 @@
     s.player.x = safestX - s.player.w / 2;
     s.player.vx = 0;
     s.player.invincible = 1.8;
+    rememberMotion(s.player);
     s.combo = 0; s.comboTimer = 0;
   }
 
@@ -877,6 +987,9 @@
     const p = s.player;
     const scale = bubbleScale();
     const direction = steer();
+    rememberMotion(p);
+    for (const entity of [...s.bubbles, ...s.harpoons, ...s.pickups, ...s.particles, ...s.rings, ...s.floats]) rememberMotion(entity);
+    tickEffects(s, dt);
     s.elapsed += dt;
     const target = direction * 280 * scale;
     const reversing = direction && p.vx !== 0 && Math.sign(target) !== Math.sign(p.vx);
@@ -887,8 +1000,10 @@
     if (Math.abs(p.vx) > 3) p.facing = Math.sign(p.vx);
     p.invincible = Math.max(0, p.invincible - dt);
     p.shootPose = Math.max(0, p.shootPose - dt);
-    if (Math.abs(p.vx) > 10) p.walkTime += dt;
-    else p.walkTime = 0;
+    const poseBlend = 1 - Math.exp(-9 * dt);
+    p.walkBlend += (Math.min(1, Math.abs(p.vx) / (280 * scale)) - p.walkBlend) * poseBlend;
+    p.shootBlend += ((p.shootPose > 0 ? 1 : 0) - p.shootBlend) * poseBlend;
+    p.walkTime += dt * Math.min(1, Math.abs(p.vx) / (280 * scale));
     s.shootCooldown = Math.max(0, s.shootCooldown - dt);
     s.fireBuffer = Math.max(0, s.fireBuffer - dt);
     if (heldFire || s.fireBuffer > 0) fireHarpoon(false);
@@ -901,15 +1016,26 @@
 
     const floor = height() - 32 * scale;
     const ceiling = 36 * scale;
+    for (let i = s.pickups.length - 1; i >= 0; i--) {
+      const pickup = s.pickups[i];
+      pickup.life -= dt; pickup.phase += dt * 3;
+      pickup.y = Math.min(floor - pickup.h, pickup.y + 115 * scale * dt);
+      if (overlaps(p, pickup)) {
+        activatePower(s, pickup.type, pickup.x + 14, pickup.y + 14);
+        s.pickups.splice(i, 1);
+      } else if (pickup.life <= 0) s.pickups.splice(i, 1);
+    }
+    // Only the bubbles are slowed: movement, shooting and the level clock stay responsive.
+    const bubbleDt = dt * (s.effects.slow > 0 ? .45 : 1);
     for (const bubble of s.bubbles) {
       const spec = BUBBLE_SPECS[bubble.stage];
       bubble.age += dt;
       bubble.impact = Math.max(0, bubble.impact - dt * 4.6);
       const previousX = bubble.x, previousY = bubble.y;
-      bubble.vy += 640 * scale * dt;
-      bubble.x += bubble.vx * dt;
-      bubble.y += bubble.vy * dt;
-      bubble.spin += bubble.vx * dt * .008;
+      bubble.vy += 640 * scale * bubbleDt;
+      bubble.x += bubble.vx * bubbleDt;
+      bubble.y += bubble.vy * bubbleDt;
+      bubble.spin += bubble.vx * bubbleDt * .008;
       if (bubble.x - bubble.r < 0) { bubble.x = bubble.r; bubble.vx = Math.abs(bubble.vx); bubble.impact = .28; }
       if (bubble.x + bubble.r > width()) { bubble.x = width() - bubble.r; bubble.vx = -Math.abs(bubble.vx); bubble.impact = .28; }
       if (bubble.y - bubble.r < ceiling) { bubble.y = ceiling + bubble.r; bubble.vy = Math.abs(bubble.vy); bubble.impact = .42; }
@@ -937,14 +1063,15 @@
     for (let h = s.harpoons.length - 1; h >= 0; h -= 1) {
       const harpoon = s.harpoons[h];
       harpoon.topY -= 680 * scale * dt;
-      const barriers = s.obstacles.filter(o => harpoon.x >= o.x && harpoon.x <= o.x + o.w && harpoon.baseY > o.y + o.h);
+      const halfWidth = harpoon.radius || 6;
+      const barriers = s.obstacles.filter(o => harpoon.x + halfWidth >= o.x && harpoon.x - halfWidth <= o.x + o.w && harpoon.baseY > o.y + o.h);
       const stopY = Math.max(ceiling, ...barriers.map(o => o.y + o.h));
       const tipY = Math.max(harpoon.topY, stopY);
       let hit = -1, nearestY = -Infinity;
       for (let b = 0; b < s.bubbles.length; b += 1) {
         const bubble = s.bubbles[b];
         const hitRadius = bubble.r * .94;
-        const dx = Math.abs(harpoon.x - bubble.x);
+        const dx = Math.max(0, Math.abs(harpoon.x - bubble.x) - halfWidth);
         if (dx > hitRadius) continue;
         const halfChord = Math.sqrt(hitRadius * hitRadius - dx * dx);
         const contactY = Math.min(harpoon.baseY, bubble.y + halfChord);
@@ -952,7 +1079,7 @@
       }
       if (hit >= 0) {
         s.harpoons.splice(h, 1);
-        splitBubble(hit);
+        splitBubble(hit, harpoon.damage || 1);
       } else if (harpoon.topY <= stopY) {
         spawnParticles(s.particles, harpoon.x, stopY, ['#d5eaf0', '#ffde96'], 5, 55);
         s.harpoons.splice(h, 1);
@@ -1027,7 +1154,7 @@
     ctx.restore();
   }
 
-  function drawBubblePaws() {
+  function drawBubblePaws(alpha = 1) {
     const w = width();
     const h = height();
     const s = bubbleState;
@@ -1037,8 +1164,8 @@
     ctx.fillRect(0, 0, w, h);
     if (!s) return;
 
-    const shakeX = reducedMotion ? 0 : (Math.random() - .5) * s.shake;
-    const shakeY = reducedMotion ? 0 : (Math.random() - .5) * s.shake;
+    const shakeX = reducedMotion ? 0 : Math.sin((s.elapsed + alpha * FIXED_STEP) * 113) * s.shake * .5;
+    const shakeY = reducedMotion ? 0 : Math.cos((s.elapsed + alpha * FIXED_STEP) * 151) * s.shake * .5;
     ctx.save();
     ctx.translate(shakeX, shakeY);
     const floor = h - 32 * bubbleScale();
@@ -1062,23 +1189,41 @@
         ctx.beginPath(); ctx.moveTo(x, obstacle.y + 3); ctx.lineTo(x + 16, obstacle.y + obstacle.h - 3); ctx.stroke();
       }
     }
-    for (const bubble of s.bubbles) drawGlossyBubble(bubble);
-    drawRings(s.rings);
-    for (const harpoon of s.harpoons) {
+    for (const current of s.bubbles) {
+      const bubble = renderMotion(current, alpha);
+      drawGlossyBubble(bubble);
+      if (s.effects.slow > 0) {
+        ctx.save(); ctx.strokeStyle = '#b2fcff'; ctx.lineWidth = 1.5; ctx.globalAlpha = .75;
+        ctx.beginPath(); ctx.arc(bubble.x, bubble.y, bubble.r + 3, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      }
+    }
+    for (const current of s.pickups) {
+      const pickup = renderMotion(current, alpha);
+      const bob = Math.sin(pickup.phase) * 2;
+      ctx.save(); ctx.globalAlpha = pickup.life < 1.5 ? .55 + Math.sin(pickup.phase * 4) * .3 : 1;
+      ctx.fillStyle = '#102034bb'; ctx.beginPath(); ctx.arc(pickup.x + 14, pickup.y + 14 + bob, 20, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = POWER_UPS[pickup.type].color; ctx.lineWidth = 2; ctx.stroke();
+      drawSprite(art[pickup.type], pickup.x, pickup.y + bob, 28, 28); ctx.restore();
+    }
+    drawRings(s.rings, alpha);
+    for (const current of s.harpoons) {
+      const harpoon = renderMotion(current, alpha);
       const harpoonHeight = harpoon.baseY - harpoon.topY;
       // Extend the shaft, not the spearhead: its proportions stay stable in flight.
-      ctx.strokeStyle = '#755029'; ctx.lineWidth = 4; ctx.beginPath();
+      ctx.strokeStyle = harpoon.wide ? '#b797fa' : '#755029'; ctx.lineWidth = harpoon.wide ? 8 : 4; ctx.beginPath();
       ctx.moveTo(harpoon.x, harpoon.baseY); ctx.lineTo(harpoon.x, harpoon.topY + 9); ctx.stroke();
       ctx.strokeStyle = '#f5d49b'; ctx.lineWidth = 1.5; ctx.stroke();
       if (art.harpoon.complete && art.harpoon.naturalWidth) {
-        ctx.drawImage(art.harpoon, 30, 32, 70, 143, harpoon.x - 7, harpoon.topY, 14, Math.min(27, harpoonHeight));
+        const tipWidth = harpoon.wide ? 28 : 14;
+        ctx.drawImage(art.harpoon, 30, 32, 70, 143, harpoon.x - tipWidth / 2, harpoon.topY, tipWidth, Math.min(27, harpoonHeight));
       } else {
         ctx.fillStyle = '#eaf7ff'; ctx.beginPath(); ctx.moveTo(harpoon.x, harpoon.topY);
         ctx.lineTo(harpoon.x - 6, harpoon.topY + 14); ctx.lineTo(harpoon.x + 6, harpoon.topY + 14); ctx.fill();
       }
     }
-    drawParticles(s.particles);
-    for (const item of s.floats) {
+    drawParticles(s.particles, alpha);
+    for (const current of s.floats) {
+      const item = renderMotion(current, alpha);
       ctx.globalAlpha = clamp(item.life / .85, 0, 1);
       ctx.fillStyle = item.color;
       ctx.strokeStyle = '#0c1025';
@@ -1091,9 +1236,8 @@
     ctx.textAlign = 'start';
     ctx.globalAlpha = 1;
 
-    const p = s.player;
+    const p = renderMotion(s.player, alpha);
     const walkingReady = art.bubbleWalk.complete && art.bubbleWalk.naturalWidth;
-    const playerArt = p.shootPose > 0 ? art.bubbleShoot : walkingReady ? art.bubbleWalk : art.bubbleIdle;
     const playerAlpha = p.invincible > 0 && Math.floor(p.invincible * 12) % 2 ? .28 : 1;
     ctx.fillStyle = 'rgba(0,0,0,.28)';
     ctx.beginPath();
@@ -1104,8 +1248,11 @@
       ctx.globalAlpha = .42 + Math.sin(s.elapsed * 7) * .15;
       ctx.beginPath(); ctx.ellipse(p.x + p.w / 2, p.y + p.h * .56, p.w * .52, p.h * .6, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
     }
-    if (Math.abs(p.vx) > 20 && p.shootPose <= 0) drawCharacter(art.bubbleWalk, p.x, p.y, p.w, p.h, p.facing < 0, playerAlpha, Math.floor(p.walkTime / .11) % 6);
-    else drawCharacter(playerArt, p.x, p.y, p.w, p.h, p.facing < 0, playerAlpha);
+    const shootBlend = art.bubbleShoot.complete ? p.shootBlend : 0;
+    const walkBlend = walkingReady ? p.walkBlend : 0;
+    if ((1 - walkBlend) * (1 - shootBlend) > .01) drawCharacter(art.bubbleIdle, p.x, p.y, p.w, p.h, p.facing < 0, playerAlpha * (1 - walkBlend) * (1 - shootBlend));
+    if (walkBlend * (1 - shootBlend) > .01) drawCharacter(art.bubbleWalk, p.x, p.y, p.w, p.h, p.facing < 0, playerAlpha * walkBlend * (1 - shootBlend), Math.floor(p.walkTime / .11) % 6);
+    if (shootBlend > .01) drawCharacter(art.bubbleShoot, p.x, p.y, p.w, p.h, p.facing < 0, playerAlpha * shootBlend);
     ctx.restore();
 
     let hudX = 10;
@@ -1121,6 +1268,7 @@
     ctx.fillStyle = '#ffffff20'; ctx.fillRect(10, 44, w - 20, 3);
     ctx.fillStyle = s.remaining <= 10 ? '#ff817a' : '#82e8d2';
     ctx.fillRect(10, 44, (w - 20) * s.remaining / LEVELS[bubbleLevel].time, 3);
+    drawPowerTimers(s, 53);
     if (s.combo >= 2) {
       ctx.fillStyle = '#ffffff20'; ctx.fillRect(12, h - 18, 104, 4);
       ctx.fillStyle = '#ffd166'; ctx.fillRect(12, h - 18, 104 * s.comboTimer / 1.55, 4);
@@ -1137,9 +1285,9 @@
     else updateBubblePaws(dt);
   }
 
-  function draw() {
-    if (game === 'jump') drawJump();
-    else drawBubblePaws();
+  function draw(alpha = 1) {
+    if (game === 'jump') drawJump(alpha);
+    else drawBubblePaws(alpha);
   }
 
   function loop(now) {
@@ -1148,13 +1296,13 @@
     lastFrame = now;
     accumulator += frameDt;
     let steps = 0;
-    while (accumulator >= FIXED_STEP && steps < 4 && running) {
+    while (accumulator + 1e-9 >= FIXED_STEP && steps < 4 && running) {
       update(FIXED_STEP);
-      accumulator -= FIXED_STEP;
+      accumulator = Math.max(0, accumulator - FIXED_STEP);
       steps += 1;
     }
     if (steps >= 4) accumulator = 0;
-    draw();
+    draw(running ? clamp(accumulator / FIXED_STEP, 0, 1) : 1);
     if (running) animationFrame = requestAnimationFrame(loop);
   }
 
