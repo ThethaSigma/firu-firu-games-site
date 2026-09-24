@@ -44,7 +44,7 @@
   }
   </script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311162e'/%3E%3Cpath d='M18 33c-6-4-5-13 2-14 4 0 6 3 7 7 3-4 7-6 11-3 6 4 5 13-1 18-5 5-13 8-16 5-2-2 1-6 3-9-2 0-4-1-6-4z' fill='%23ffcf5a'/%3E%3Ccircle cx='21' cy='20' r='5' fill='%23ff6b6b'/%3E%3Ccircle cx='35' cy='18' r='5' fill='%236ee7c7'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=notebook2">
+  <link rel="stylesheet" href="styles.css?v=cinematic-preview2">
 </head>
 <body>
   <a class="skip" href="#indir" data-tr="İndirme bağlantılarına geç" data-en="Skip to download links">İndirme bağlantılarına geç</a>
@@ -58,7 +58,6 @@
           <a href="#oyunlar" data-tr="Oyunlar" data-en="Games">Oyunlar</a>
           <a href="#surec" data-tr="Nasıl yapıyoruz?" data-en="How we build">Nasıl yapıyoruz?</a>
           <a href="#yorumlar" data-tr="Yorumlar" data-en="Comments">Yorumlar</a>
-          <a href="#indir" data-tr="Ücretsiz indir" data-en="Download free">Ücretsiz indir</a>
         </div>
         <div class="language-switch" role="group" aria-label="Dil seçimi" data-aria-tr="Dil seçimi" data-aria-en="Language selection">
           <button class="lang-btn" id="langTr" type="button" aria-pressed="true" lang="tr">TR</button>
@@ -126,11 +125,16 @@
 
   <main id="top">
     <section class="hero-stage" aria-labelledby="hero-title">
+    <div class="hero-world" aria-hidden="true">
+      <div class="hero-world-paw"></div>
+      <div class="hero-world-bubble"></div>
+    </div>
     <div class="shell hero">
       <div class="hero-copy">
-        <p class="eyebrow" data-tr="İki oyun · Tek pati dünyası" data-en="Two games · One paw universe">İki oyun · Tek pati dünyası</p>
-        <h1 id="hero-title"><span data-tr="Firu’nun dünyası" data-en="Firu’s world">Firu’nun dünyası</span> <span class="pop" data-tr="cebinde." data-en="in your pocket.">cebinde.</span></h1>
-        <p class="lead" data-tr="Bir gerçek köpek. İki kocaman macera. Gökyüzüne sıçra, balonları patlat ve Firu’nun dünyasını cebine taşı." data-en="One real dog. Two big adventures. Jump into the sky, pop every bubble, and take Firu’s world wherever you go.">Bir gerçek köpek. İki kocaman macera. Gökyüzüne sıçra, balonları patlat ve Firu’nun dünyasını cebine taşı.</p>
+        <img class="hero-mark" src="assets/firufiru_logo.png" width="440" height="360" alt="Firu Firu Games" fetchpriority="high">
+        <p class="eyebrow" data-tr="Paw Jump + Bubble Paws" data-en="Paw Jump + Bubble Paws">Paw Jump + Bubble Paws</p>
+        <h1 id="hero-title" data-tr="İki oyun. Tek macera." data-en="Two games. One adventure.">İki oyun. Tek macera.</h1>
+        <p class="lead" data-tr="Firu ile gökyüzüne sıçra, balonları patlat. İki oyun da cebinde." data-en="Leap skyward and pop bubbles with Firu. Two games, wherever you go.">Firu ile gökyüzüne sıçra, balonları patlat. İki oyun da cebinde.</p>
         <div class="store-actions" id="indir" aria-label="Firu Firu Games indirme bağlantıları" data-aria-tr="Firu Firu Games indirme bağlantıları" data-aria-en="Firu Firu Games download links">
           <a class="official-store-link" href="https://play.google.com/store/apps/details?id=com.firufirugames.app" target="_blank" rel="noopener noreferrer" aria-label="Firu Firu Games'i Google Play'den indir" data-aria-tr="Firu Firu Games'i Google Play'den indir" data-aria-en="Download Firu Firu Games from Google Play">
             <img class="store-badge google-badge badge-tr" src="assets/google-play-tr.png" alt="">
@@ -141,11 +145,8 @@
             <img class="store-badge apple-badge badge-en" src="assets/app-store-en.svg" alt="">
           </a>
         </div>
-        <button class="demo-text-link" id="openDemo" data-tr="Önce web demosunu dene →" data-en="Try the web demo first →">Önce web demosunu dene →</button>
-      </div>
-      <div class="hero-showcase">
-        <img src="assets/firufiru_games_showcase.webp" width="1672" height="941" fetchpriority="high" alt="Firu Firu Games, Bubble Paws ve Paw Jump oyun dünyası" data-alt-tr="Firu Firu Games, Bubble Paws ve Paw Jump oyun dünyası" data-alt-en="Firu Firu Games with the Bubble Paws and Paw Jump worlds">
-        <div class="hero-badge">PAW JUMP + BUBBLE PAWS</div>
+        <p class="hero-free" data-tr="ÜCRETSİZ İNDİR" data-en="FREE DOWNLOAD">ÜCRETSİZ İNDİR</p>
+        <button class="demo-text-link" id="openDemo" data-tr="Web demosunu dene →" data-en="Try the web demo →">Web demosunu dene →</button>
       </div>
     </div>
     </section>

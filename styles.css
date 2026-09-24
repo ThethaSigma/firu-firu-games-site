@@ -232,3 +232,173 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
   .ticker.is-ready .ticker-group { width: 100%; min-width: 0; flex-wrap: wrap; }
   .ticker.is-ready .ticker-duplicate, .ticker-toggle { display: none; }
 }
+
+/* Local concept: two gently moving game worlds frame the download-first opening. */
+.hero-stage {
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: calc(100svh - 88px);
+  background: #0b1020;
+}
+.hero-world {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hero-world > div {
+  background-size: cover;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+.hero-world-paw {
+  background-image: url('assets/paw_jump_keyart.jpg');
+  background-position: 31% center;
+  animation: world-drift-paw 20s ease-in-out infinite alternate;
+}
+.hero-world > .hero-world-bubble {
+  background-image: url('assets/bubble_paws_keyart.jpg');
+  background-size: auto 135%;
+  background-position: right center;
+  animation: world-drift-bubble 24s ease-in-out infinite alternate;
+}
+.hero-world::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, #090d1df5 0%, #090d1de8 26%, #090d1d8a 65%, #090d1d72 100%),
+    linear-gradient(180deg, #090d1daa 0%, transparent 25%, transparent 70%, #090d1dbb 100%);
+}
+.hero-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 48%, #a590ff1b, transparent 55%);
+  animation: hero-glow 9s ease-in-out infinite alternate;
+}
+.hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: min(100% - 48px, 980px);
+  min-height: calc(100svh - 88px);
+  padding-block: 48px 55px;
+  text-align: center;
+}
+.hero-copy { width: 100%; max-width: 700px; }
+.hero-mark {
+  width: clamp(185px, 21vw, 280px);
+  height: auto;
+  margin: 0 auto 8px;
+  filter: drop-shadow(0 12px 20px #000b);
+}
+.hero .eyebrow {
+  justify-content: center;
+  margin: 0 auto 18px;
+  padding: 5px 13px;
+  font-size: 12px;
+  letter-spacing: .13em;
+  color: #d7fff2;
+  background: #071527a6;
+  backdrop-filter: blur(8px);
+}
+.hero h1 {
+  max-width: none;
+  margin: 0 auto 13px;
+  font-size: clamp(3.2rem, 5.9vw, 6.1rem);
+  line-height: .99;
+  color: #fff;
+  text-shadow: 0 4px 28px #000d;
+}
+.hero .lead {
+  max-width: 38rem;
+  margin: 0 auto 27px;
+  color: #eef2ff;
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
+  line-height: 1.5;
+  text-shadow: 0 2px 12px #000;
+}
+.hero .store-actions { justify-content: center; gap: 14px; }
+.hero .official-store-link {
+  flex: none;
+  width: 150px;
+  max-width: calc((100% - 14px) / 2);
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  box-shadow: none;
+}
+.hero .official-store-link:hover {
+  transform: translateY(-2px) scale(1.035);
+  filter: drop-shadow(0 0 12px #ffffff50);
+}
+.hero .official-store-link .google-badge,
+.hero .official-store-link .apple-badge { width: 100%; height: auto; max-width: none; margin: 0; }
+.nav-links a:last-child { color: #c8cbd8; }
+.nav-links a:last-child:hover { color: #fff; }
+.hero-free {
+  margin: 12px 0 3px;
+  color: #e8ecfb;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .24em;
+  text-shadow: 0 2px 8px #000;
+}
+.hero .demo-text-link {
+  color: #d6cdfd;
+  font-size: 14px;
+  text-shadow: 0 2px 8px #000;
+}
+@keyframes world-drift-paw {
+  from { transform: scale(1.09) translate(-1.5%, 1%); }
+  to { transform: scale(1.16) translate(1.5%, -1%); }
+}
+@keyframes world-drift-bubble {
+  from { transform: scale(1.13) translate(1%, -1%); }
+  to { transform: scale(1.08) translate(-1.5%, 1%); }
+}
+@keyframes hero-glow {
+  from { opacity: .55; transform: translateX(-4%); }
+  to { opacity: 1; transform: translateX(4%); }
+}
+@media (max-width: 760px) {
+  .nav-links { display: none; }
+  .hero-stage, .hero { min-height: calc(100svh - 74px); }
+  .hero { width: min(100% - 36px, 560px); padding-block: 30px 45px; }
+  .hero-world { display: block; }
+  .hero-world > .hero-world-paw {
+    position: absolute;
+    inset: 0;
+    background-image: url('assets/firufiru_games_showcase.webp');
+    background-size: auto 180%;
+    background-position: 50% bottom;
+  }
+  .hero-world-bubble { display: none; }
+  .hero-world::after {
+    background: linear-gradient(180deg, #070c1dbb, #070c1de8 31%, #070c1deb 66%, #070c1d9e);
+  }
+  .hero-mark { width: clamp(155px, 44vw, 215px); margin-bottom: 10px; }
+  .hero h1 { font-size: clamp(2.55rem, 10vw, 4.15rem); line-height: 1.02; margin-bottom: 15px; }
+  .hero .lead { max-width: 29rem; margin-bottom: 22px; font-size: 1rem; }
+  .hero .store-actions { flex-wrap: nowrap; gap: 10px; }
+  .hero .official-store-link { max-width: calc((100% - 10px) / 2); }
+  .hero-free { font-size: 11px; }
+}
+@media (max-height: 620px) and (orientation: landscape) {
+  .hero-stage, .hero { min-height: 590px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-world > div, .hero-stage::after { animation: none; }
+  .hero-world > div { will-change: auto; transform: none; }
+}
