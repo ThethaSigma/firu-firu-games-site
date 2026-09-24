@@ -255,12 +255,12 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
   background-repeat: no-repeat;
 }
 .hero-world-paw {
-  background-image: url('assets/paw_jump_keyart.jpg');
+  background-image: url('assets/paw_jump_keyart_hd.webp');
   background-position: 31% center;
   animation: world-drift-paw 20s ease-in-out infinite alternate;
 }
 .hero-world > .hero-world-bubble {
-  background-image: url('assets/bubble_paws_keyart.jpg');
+  background-image: url('assets/bubble_paws_keyart_hd.webp');
   background-size: cover;
   background-position: right center;
   animation: world-drift-bubble 24s ease-in-out infinite alternate;
@@ -270,7 +270,7 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at center, #090d1df5 0%, #090d1de8 26%, #090d1d8a 65%, #090d1d72 100%),
+    radial-gradient(ellipse at center, #090d1df5 0%, #090d1de8 26%, #090d1d55 65%, #090d1d32 100%),
     linear-gradient(180deg, #090d1daa 0%, transparent 25%, transparent 70%, #090d1dbb 100%);
 }
 .hero-stage::after {
