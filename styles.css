@@ -164,6 +164,11 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
 .quip-reddit { --quip-paper: #cbdffc; }
 .quip-bubble { --quip-paper: #f5cddd; }
 .quip-jump { --quip-paper: #f6edaf; }
+.quip-mom { --quip-paper: #f5cddd; }
+.quip-dad { --quip-paper: #f6edaf; }
+.quip-neighbor { --quip-paper: #d9f2c4; }
+.quip-cat { --quip-paper: #ffc9b8; }
+.quip-friend-again { --quip-paper: #e4dcfc; }
 .quip .stars { color: #8b5515; }
 .quip .stars .dim { opacity: .4; }
 .quip-by { color: #4c5067; border-top: 1px solid #10142620; padding-top: 18px; }
