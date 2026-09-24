@@ -253,7 +253,6 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
 .hero-world > div {
   background-size: cover;
   background-repeat: no-repeat;
-  will-change: transform;
 }
 .hero-world-paw {
   background-image: url('assets/paw_jump_keyart.jpg');
@@ -262,7 +261,7 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
 }
 .hero-world > .hero-world-bubble {
   background-image: url('assets/bubble_paws_keyart.jpg');
-  background-size: auto 135%;
+  background-size: cover;
   background-position: right center;
   animation: world-drift-bubble 24s ease-in-out infinite alternate;
 }
@@ -361,12 +360,12 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
   text-shadow: 0 2px 8px #000;
 }
 @keyframes world-drift-paw {
-  from { transform: scale(1.09) translate(-1.5%, 1%); }
-  to { transform: scale(1.16) translate(1.5%, -1%); }
+  from { transform: scale(1.01) translate(-.4%, .2%); }
+  to { transform: scale(1.035) translate(.4%, -.2%); }
 }
 @keyframes world-drift-bubble {
-  from { transform: scale(1.13) translate(1%, -1%); }
-  to { transform: scale(1.08) translate(-1.5%, 1%); }
+  from { transform: scale(1.035) translate(.4%, -.2%); }
+  to { transform: scale(1.01) translate(-.4%, .2%); }
 }
 @keyframes hero-glow {
   from { opacity: .55; transform: translateX(-4%); }
@@ -381,7 +380,7 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
     position: absolute;
     inset: 0;
     background-image: url('assets/firufiru_games_showcase.webp');
-    background-size: auto 180%;
+    background-size: auto 145%;
     background-position: 50% bottom;
   }
   .hero-world-bubble { display: none; }
@@ -404,5 +403,5 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-world > div, .hero-stage::after { animation: none; }
-  .hero-world > div { will-change: auto; transform: none; }
+  .hero-world > div { transform: none; }
 }
