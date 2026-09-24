@@ -328,10 +328,10 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
 .hero .store-actions { justify-content: center; gap: 14px; }
 .hero .official-store-link {
   flex: none;
-  width: 150px;
+  width: 190px;
   max-width: calc((100% - 14px) / 2);
-  height: 48px;
-  min-height: 48px;
+  height: 61px;
+  min-height: 61px;
   padding: 0;
   overflow: hidden;
   border: 0;
@@ -394,6 +394,10 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
   .hero .store-actions { flex-wrap: nowrap; gap: 10px; }
   .hero .official-store-link { max-width: calc((100% - 10px) / 2); }
   .hero-free { font-size: 11px; }
+}
+@media (max-width: 390px) {
+  .hero .store-actions { flex-direction: column; }
+  .hero .official-store-link { max-width: 100%; }
 }
 @media (max-height: 620px) and (orientation: landscape) {
   .hero-stage, .hero { min-height: 590px; }
