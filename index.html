@@ -44,7 +44,7 @@
   }
   </script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311162e'/%3E%3Cpath d='M18 33c-6-4-5-13 2-14 4 0 6 3 7 7 3-4 7-6 11-3 6 4 5 13-1 18-5 5-13 8-16 5-2-2 1-6 3-9-2 0-4-1-6-4z' fill='%23ffcf5a'/%3E%3Ccircle cx='21' cy='20' r='5' fill='%23ff6b6b'/%3E%3Ccircle cx='35' cy='18' r='5' fill='%236ee7c7'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=comments2">
+  <link rel="stylesheet" href="styles.css?v=notebook1">
 </head>
 <body>
   <a class="skip" href="#indir" data-tr="İndirme bağlantılarına geç" data-en="Skip to download links">İndirme bağlantılarına geç</a>
@@ -245,46 +245,50 @@
       <div class="shell">
         <div class="section-head">
           <h2 id="lab-title" data-tr="Atölyeden notlar" data-en="Notes from the workshop">Atölyeden notlar</h2>
-          <p data-tr="Duvara çıkanlar oyuna girdi. Gerisi masada kaldı." data-en="What made the wall made the game. The rest stayed on the desk.">Duvara çıkanlar oyuna girdi. Gerisi masada kaldı.</p>
+          <p data-tr="Yapım defterinden birkaç sayfa. Kahve lekeleri dahil." data-en="A few pages from the build notebook. Coffee stains included.">Yapım defterinden birkaç sayfa. Kahve lekeleri dahil.</p>
         </div>
-        <div class="workshop-wall">
-          <article class="desk-hero">
-            <span class="washi" aria-hidden="true"></span>
-            <div>
-              <p class="note-kicker" data-tr="Günün sorusu" data-en="Question of the day">Günün sorusu</p>
-              <p class="desk-quote"><span class="qmark" aria-hidden="true">“</span><span data-tr="Başparmak bunu tekrar yapmak ister mi?" data-en="Does your thumb want to do that again?">Başparmak bunu tekrar yapmak ister mi?</span></p>
-            </div>
-            <p class="desk-caption" data-tr="İyi bir kontrol şeması kendini açıklamaz; kendini hissettirir." data-en="A great control scheme does not explain itself; it makes itself felt.">İyi bir kontrol şeması kendini açıklamaz; kendini hissettirir.</p>
-            <svg class="paw-stamp" viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="42" rx="14" ry="11" fill="#ff5964"/><circle cx="16" cy="24" r="6" fill="#ff5964"/><circle cx="28" cy="15" r="6.5" fill="#ff5964"/><circle cx="42" cy="15" r="6.5" fill="#ff5964"/><circle cx="52" cy="26" r="5.5" fill="#ff5964"/></svg>
+        <div class="notebook-wrap">
+          <article class="notebook">
+            <span class="coffee-ring" aria-hidden="true"></span>
+            <p class="notebook-title" data-tr="Hata ve düzeltme defteri" data-en="Bugs and fixes log">Hata ve düzeltme defteri</p>
+            <ol class="log">
+              <li>
+                <span class="log-no">#03</span>
+                <p data-tr="Firu platformlara kulağıyla basıyordu. Çarpışma kutusunu ayaklarına indirdik." data-en="Firu was landing on platforms with his ears. We moved his hitbox down to his feet.">Firu platformlara kulağıyla basıyordu. Çarpışma kutusunu ayaklarına indirdik.</p>
+                <b class="log-tag tag-fixed" data-tr="Düzeltildi" data-en="Fixed">Düzeltildi</b>
+              </li>
+              <li>
+                <span class="log-no">#07</span>
+                <p data-tr="Balonu vurunca ikiye bölünüyordu. Hata sandık. Sonra bütün oyun bu oldu." data-en="Shoot a bubble and it split in two. We thought it was a bug. Then it became the whole game.">Balonu vurunca ikiye bölünüyordu. Hata sandık. Sonra bütün oyun bu oldu.</p>
+                <b class="log-tag tag-feature" data-tr="Özellik oldu" data-en="Now a feature">Özellik oldu</b>
+              </li>
+              <li>
+                <span class="log-no">#12</span>
+                <p data-tr="Çatlak platformlar hiç kırılmıyordu. Artık kırılıyor. En çok şikâyet eden: karım." data-en="Cracked platforms never broke. Now they do. Loudest complaint so far: my wife.">Çatlak platformlar hiç kırılmıyordu. Artık kırılıyor. En çok şikâyet eden: karım.</p>
+                <b class="log-tag tag-fixed" data-tr="Düzeltildi" data-en="Fixed">Düzeltildi</b>
+              </li>
+              <li>
+                <span class="log-no">#18</span>
+                <p data-tr="Kedi başta arka planda duran bir süstü. Bakışları yüzünden boss yapıldı." data-en="The cat started out as background decoration. It got promoted to boss for the way it stares.">Kedi başta arka planda duran bir süstü. Bakışları yüzünden boss yapıldı.</p>
+                <b class="log-tag tag-promoted" data-tr="Terfi etti" data-en="Promoted">Terfi etti</b>
+              </li>
+              <li>
+                <span class="log-no">#21</span>
+                <p data-tr="Annem 3. bölümü geçemedi. 3. bölüm kolaylaştı. Konu kapandı." data-en="My mom couldn’t beat level 3. Level 3 got easier. Case closed.">Annem 3. bölümü geçemedi. 3. bölüm kolaylaştı. Konu kapandı.</p>
+                <b class="log-tag tag-balanced" data-tr="Dengelendi" data-en="Balanced">Dengelendi</b>
+              </li>
+              <li>
+                <span class="log-no">#24</span>
+                <p data-tr="Firu gerçek hayatta hâlâ çift zıplayamıyor. Üzerinde çalışıyoruz." data-en="Firu still can’t double-jump in real life. We’re working on it.">Firu gerçek hayatta hâlâ çift zıplayamıyor. Üzerinde çalışıyoruz.</p>
+                <b class="log-tag tag-open" data-tr="Açık" data-en="Open">Açık</b>
+              </li>
+            </ol>
           </article>
-          <article class="desk-rule">
-            <p class="note-kicker" data-tr="Atölye kuralı" data-en="Workshop rule">Atölye kuralı</p>
-            <div>
-              <h3><span data-tr="Önce eğlence." data-en="Fun first.">Önce eğlence.</span><br><span data-tr="Sonra efekt." data-en="Effects second.">Sonra efekt.</span></h3>
-              <p data-tr="Işıltı, sıkıcı bir zıplamayı kurtarmaz." data-en="Sparkle never saves a dull jump.">Işıltı, sıkıcı bir zıplamayı kurtarmaz.</p>
-            </div>
-            <span class="rule-index" aria-hidden="true">01</span>
-          </article>
-          <div class="prototype-row">
-            <article class="proto proto-jump">
-              <p class="note-kicker" data-tr="Paw Jump · tur 18" data-en="Paw Jump · run 18">Paw Jump · tur 18</p>
-              <h3 data-tr="Çift zıplama" data-en="Double jump">Çift zıplama</h3>
-              <p data-tr="Havada bir an geç kalıyordu. Tetiği öne alınca “bir kez daha” geldi." data-en="It was a beat late in the air. Pulling the trigger forward made people want one more try.">Havada bir an geç kalıyordu. Tetiği öne alınca “bir kez daha” geldi.</p>
-              <b class="stamp" data-tr="Tutuldu" data-en="Kept">Tutuldu</b>
-            </article>
-            <article class="proto proto-pop">
-              <p class="note-kicker" data-tr="Bubble Paws · tur 07" data-en="Bubble Paws · run 07">Bubble Paws · tur 07</p>
-              <h3 data-tr="Küçük balon" data-en="Tiny bubble">Küçük balon</h3>
-              <p data-tr="Küçük parçalar kaçıyordu. Hız ve puan birlikte artınca kovalamaca keyif oldu." data-en="The little pieces kept slipping away. Raising speed and score together made the chase the fun part.">Küçük parçalar kaçıyordu. Hız ve puan birlikte artınca kovalamaca keyif oldu.</p>
-              <b class="stamp" data-tr="Tutuldu" data-en="Kept">Tutuldu</b>
-            </article>
-            <article class="proto proto-world">
-              <p class="note-kicker" data-tr="Ortak dünya" data-en="Shared world">Ortak dünya</p>
-              <h3 data-tr="Tek kulübe" data-en="One clubhouse">Tek kulübe</h3>
-              <p data-tr="İki oyun ayrı ritimde kalır. Kazanılan deneyim aynı Firu’yu büyütür." data-en="The two games keep their own rhythm. Experience earned still grows the same Firu.">İki oyun ayrı ritimde kalır. Kazanılan deneyim aynı Firu’yu büyütür.</p>
-              <b class="stamp" data-tr="Tutuldu" data-en="Kept">Tutuldu</b>
-            </article>
-          </div>
+          <aside class="sticky-note">
+            <span class="tape" aria-hidden="true"></span>
+            <p data-tr="Not: Firu bu defteri iki kez yemeye çalıştı." data-en="Note: Firu has tried to eat this notebook twice.">Not: Firu bu defteri iki kez yemeye çalıştı.</p>
+            <svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="42" rx="14" ry="11"/><circle cx="16" cy="24" r="6"/><circle cx="28" cy="15" r="6.5"/><circle cx="42" cy="15" r="6.5"/><circle cx="52" cy="26" r="5.5"/></svg>
+          </aside>
         </div>
       </div>
     </section>
@@ -379,7 +383,7 @@
   <script>
     (() => {
       if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const targets = document.querySelectorAll('.game-card, .story-shot, .process-story-copy, .step, .shipaton-banner, .desk-hero, .desk-rule, .proto, .quip, .finale h2');
+      const targets = document.querySelectorAll('.game-card, .story-shot, .process-story-copy, .step, .shipaton-banner, .notebook, .sticky-note, .quip, .finale h2');
       const observer = new IntersectionObserver(entries => entries.forEach(entry => {
         if (!entry.isIntersecting) return;
         entry.target.classList.add('is-in');
