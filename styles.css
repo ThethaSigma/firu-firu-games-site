@@ -405,3 +405,58 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
   .hero-world > div, .hero-stage::after { animation: none; }
   .hero-world > div { transform: none; }
 }
+
+/* Trial hero: show the supplied artwork at full clarity, without zoom animation
+   or backdrop blur. The illustration already carries the game's wordmark. */
+.hero-stage { background: #071a39; }
+.hero-world { display: block; }
+.hero-world > .hero-world-paw {
+  position: absolute;
+  inset: 0;
+  background-image: url('assets/hero_user_art_20260925.png');
+  background-position: center center;
+  background-size: cover;
+  animation: none;
+  transform: none;
+}
+.hero-world > .hero-world-bubble { display: none; }
+.hero-world::after {
+  background: linear-gradient(180deg, #07112812 0%, transparent 49%, #07112814 68%, #071128b8 100%);
+}
+.hero-stage::after { display: none; }
+.hero { align-items: flex-end; padding-block: 36px 34px; }
+.hero-copy {
+  max-width: 690px;
+  margin-inline: auto;
+  padding: 16px 22px 11px;
+  border: 1px solid #ffffff45;
+  border-radius: 24px;
+  background: #071128b9;
+  box-shadow: 0 14px 50px #06102791;
+}
+.hero-mark, .hero .eyebrow, .hero .lead { display: none; }
+.hero h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.hero .store-actions { gap: 12px; }
+.hero-free { margin-top: 5px; }
+.hero .demo-text-link { padding: 5px 0; }
+@media (max-width: 760px) {
+  .hero-stage, .hero { min-height: calc(100svh - 74px); }
+  .hero-world > .hero-world-paw {
+    background-image: url('assets/hero_user_art_20260925.png');
+    background-size: cover;
+    background-position: 50% center;
+  }
+  .hero-world::after { background: linear-gradient(180deg, #07112824 0%, transparent 35%, #07112818 65%, #071128dc 100%); }
+  .hero { padding-block: 20px 24px; }
+  .hero-copy { padding: 12px 10px 7px; border-radius: 16px; }
+}
