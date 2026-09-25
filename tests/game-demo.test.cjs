@@ -121,6 +121,24 @@ test('Paw Jump generated platforms stay within the tuned jump height', () => {
   }
 });
 
+test('Paw Jump generated route fits the player travel available before landing', () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const { demo } = harness(seed); demo.setDemoDrawer(true); demo.startGame();
+    const s = demo.state().jump;
+    for (let i = 0; i < 25; i++) {
+      const before = s.platforms.filter(p => p.type !== 'fake').reduce((top, p) => p.y < top.y ? p : top);
+      demo.generateJumpPlatform();
+      const after = s.platforms.filter(p => p.type !== 'fake').reduce((top, p) => p.y < top.y ? p : top);
+      const gap = before.y - after.y;
+      const time = (580 + Math.sqrt(580 ** 2 - 2 * 980 * gap)) / 980;
+      const accelerationTime = 260 / 1800;
+      const travel = time < accelerationTime ? 900 * time * time : 260 * (time - accelerationTime / 2);
+      const centreShift = Math.abs(after.x + after.w / 2 - before.originX - before.w / 2);
+      assert.ok(centreShift <= travel * .78 + 1e-7, `route shifts ${centreShift}px with ${travel}px available`);
+    }
+  }
+});
+
 test('a normal jump lands on a platform 120 pixels above', () => {
   const { demo } = harness(); demo.setDemoDrawer(true); demo.startGame();
   const s = demo.state().jump;
@@ -152,6 +170,30 @@ test('Bubble Paws walks, fires with cooldown, and stops held fire on blur', () =
   assert.equal(demo.state().heldFire, true);
   window.emit('blur'); assert.equal(demo.state().heldFire, false);
   assert.equal(demo.state().paused, true);
+});
+
+test('Bubble Paws starts with mobile tutorial speed, height and a safe player lane', () => {
+  const { demo } = harness(); demo.selectGame('pop'); demo.setDemoDrawer(true); demo.startGame();
+  const s = demo.state().bubble, bubble = s.bubbles[0];
+  assert.equal(bubble.vx, 17);
+  assert.equal(bubble.vy, 0);
+  assert.equal(bubble.y, 86);
+  assert.ok(Math.abs(bubble.x - 340) >= 96 + bubble.r);
+});
+
+test('Bubble Paws shield absorbs one contact and extra life respects the cap', () => {
+  const { demo } = harness(); demo.selectGame('pop'); demo.setDemoDrawer(true); demo.startGame();
+  const s = demo.state().bubble;
+  s.grace = 0; s.shield = 1;
+  demo.loseBubbleLife();
+  assert.equal(s.lives, 5); assert.equal(s.shield, 0);
+  assert.ok(s.player.invincible > 0);
+  s.player.invincible = 0;
+  demo.loseBubbleLife(); assert.equal(s.lives, 4);
+  s.pickups.push({ type: 'extraLife', x: s.player.x, y: s.player.y, w: 28, h: 28, life: 9, phase: 0 });
+  demo.updateBubblePaws(1 / 60); assert.equal(s.lives, 5);
+  s.pickups.push({ type: 'shield', x: s.player.x, y: s.player.y, w: 28, h: 28, life: 9, phase: 0 });
+  demo.updateBubblePaws(1 / 60); assert.equal(s.shield, 1);
 });
 
 function clearLevel(demo) {

@@ -81,7 +81,7 @@
       score: 'SKOR', best: 'REKOR', start: 'Oyunu başlat', retry: 'Tekrar dene', oneMore: 'Bir tur daha',
       left: '← SOL', right: 'SAĞ →', doubleJump: 'ÇİFT ZIPLA', fire: 'ATEŞ', seconds: 'sn', combo: 'KOMBO',
       bubbles: 'BALON', level: 'BÖLÜM', timeUpTitle: 'Süre doldu',
-      magnet: 'MIKNATIS', rocket: 'ROKET', wide: 'GENİŞ ZIPKIN', slow: 'YAVAŞLATMA',
+      magnet: 'MIKNATIS', rocket: 'ROKET', wide: 'GENİŞ ZIPKIN', slow: 'YAVAŞLATMA', shield: 'KALKAN', extraLife: 'EK CAN',
       pause: 'Duraklat', resume: 'Devam et', paused: 'Küçük bir mola.',
       pauseText: 'Hazır olduğunda kaldığın yerden devam et.',
       mute: 'Sesi kapat', unmute: 'Sesi aç', next: 'Sonraki bölüm',
@@ -89,13 +89,13 @@
       completeText: points => `Demo tamamlandı. ${points} puan! 50 bölümün tamamı mobil uygulamada seni bekliyor.`,
       jumpKicker: 'SONSUZ TIRMANIŞ', popKicker: '3 BÖLÜMLÜK MACERA',
       jumpTip: 'Mıknatıs 5 sn kemikleri çeker; roket 2,2 sn yükseltir. Uçarken yön verebilirsin. Çatlak taşlar tutmaz; mor simge çift zıplama verir.',
-      popTip: 'Düşen simgeleri topla: yavaşlatma 6 sn sürer, geniş zıpkın 8 sn boyunca ahşabı tek atışta kırar. ATEŞ tuşunu basılı tutabilirsin.',
+      popTip: 'Düşen simgeleri topla: geniş zıpkın ahşabı tek atışta kırar; ilerleyen bölümlerde yavaşlatma ve kalkan da var. ATEŞ tuşunu basılı tutabilirsin.',
       jumpGuide: 'Her iniş yeni bir başlangıç. Kemikleri topla, hareketli platformları takip et ve rekorunu yükselt.',
       popGuide: 'Üç farklı bölüm: balonları parçala, engellerin etrafından dolaş, ahşap balonları kır.',
       goodJump: 'TEMİZ İNİŞ!', rescue: 'BİR ŞANS DAHA',
       cracked: 'ÇATLAK PLATFORM!', saveJump: 'ÇİFT ZIPLA, KURTUL!', woodCrack: 'BİR İSABET DAHA!',
       jumpIntro: 'Sağa/sola basılı tut; Firu otomatik zıplar. Mor simge çift zıplama verir. Mıknatıs kemikleri çeker, roket yükseltir. Çatlak taşlara dikkat.',
-      bubbleIntro: 'Sağa/sola basılı tut, ATEŞ ile balonları böl. Düşen güç simgelerini yakala: geniş zıpkın ahşabı kırar, yavaşlatma balonları ağırlaştırır.',
+      bubbleIntro: 'Sağa/sola basılı tut, ATEŞ ile balonları böl. Düşen güç simgelerini yakala: geniş zıpkın, ek can ve ilerleyen bölümlerde kalkan seni bekliyor.',
       jumpEndTitle: 'Paw Jump turu bitti',
       jumpEnd: (metres, bones) => `${metres} metreye çıktın ve ${bones} kemik topladın.`,
       clearTitle: 'Bölüm temiz!',
@@ -108,7 +108,7 @@
       score: 'SCORE', best: 'BEST', start: 'Start game', retry: 'Try again', oneMore: 'One more run',
       left: '← LEFT', right: 'RIGHT →', doubleJump: 'DOUBLE JUMP', fire: 'FIRE', seconds: 's', combo: 'COMBO',
       bubbles: 'BUBBLES', level: 'LEVEL', timeUpTitle: 'Time up',
-      magnet: 'MAGNET', rocket: 'ROCKET', wide: 'WIDE HARPOON', slow: 'SLOW BUBBLES',
+      magnet: 'MAGNET', rocket: 'ROCKET', wide: 'WIDE HARPOON', slow: 'SLOW BUBBLES', shield: 'SHIELD', extraLife: 'EXTRA LIFE',
       pause: 'Pause', resume: 'Resume', paused: 'Take a breath.',
       pauseText: 'Your adventure will be right here when you are ready.',
       mute: 'Mute sound', unmute: 'Enable sound', next: 'Next level',
@@ -116,13 +116,13 @@
       completeText: points => `Demo complete. ${points} points! All 50 levels are waiting in the mobile app.`,
       jumpKicker: 'ENDLESS CLIMB', popKicker: 'A THREE-LEVEL ADVENTURE',
       jumpTip: 'The magnet pulls bones for 5 s; the rocket lifts you for 2.2 s. Keep steering in flight. Cracked stones break; purple pickups grant double jumps.',
-      popTip: 'Catch falling pickups: slow bubbles for 6 s, or a wide harpoon for 8 s that breaks wood in one hit. Hold FIRE to keep shooting.',
+      popTip: 'Catch falling pickups: wide harpoons break wood in one hit; later levels add slow bubbles and a shield. Hold FIRE to keep shooting.',
       jumpGuide: 'Every landing is a new beginning. Collect bones, follow moving platforms, and beat your best.',
       popGuide: 'Three different levels: split bubbles, move around obstacles, and break wooden bubbles.',
       goodJump: 'PERFECT LANDING!', rescue: 'ONE MORE CHANCE',
       cracked: 'CRACKED PLATFORM!', saveJump: 'DOUBLE JUMP TO RECOVER!', woodCrack: 'ONE MORE HIT!',
       jumpIntro: 'Hold left/right; Firu jumps automatically. Purple pickups grant double jumps. Magnets pull bones; rockets boost you upward. Watch for cracked stones.',
-      bubbleIntro: 'Hold left/right and FIRE to split bubbles. Catch falling powers: wide harpoons break wood; slow pickups reduce bubble speed.',
+      bubbleIntro: 'Hold left/right and FIRE to split bubbles. Catch falling powers: wide harpoons, extra lives and, in later levels, a shield.',
       jumpEndTitle: 'Paw Jump run over',
       jumpEnd: (metres, bones) => `You climbed ${metres} metres and collected ${bones} bones.`,
       clearTitle: 'Level clear!',
@@ -146,6 +146,7 @@
     wide: { duration: 8, color: '#c6a6ff' },
     slow: { duration: 6, color: '#90edee' }
   };
+  const PICKUP_COLORS = { wide: '#c6a6ff', slow: '#90edee', shield: '#7ff5cd', extraLife: '#ff91ac' };
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
 
   let game = 'jump';
@@ -410,6 +411,18 @@
   // Paw Jump: mobile-game physics, portrait camera, real tuning.
   const JUMP_TUNING = { gravity: 980, normalSpeed: 580, minGap: 84, maxGap: 120, safeGapRatio: .72 };
 
+  function jumpLandingTime(gap) {
+    const speed = JUMP_TUNING.normalSpeed;
+    return (speed + Math.sqrt(Math.max(0, speed * speed - 2 * JUMP_TUNING.gravity * gap))) / JUMP_TUNING.gravity;
+  }
+
+  function jumpHorizontalReach(gap) {
+    const time = jumpLandingTime(gap);
+    const accelerationTime = 260 / 1800;
+    const travel = time < accelerationTime ? 900 * time * time : 260 * (time - accelerationTime / 2);
+    return travel * .78;
+  }
+
   function jumpScale() {
     return width() / 400;
   }
@@ -448,8 +461,11 @@
     const gap = Math.min(clamp(JUMP_TUNING.minGap + metres / 95, JUMP_TUNING.minGap, JUMP_TUNING.maxGap)
       * (.96 + Math.random() * .08), safeGap) * scale;
     const platformWidth = (56 + Math.random() * 34) * scale;
-    const reach = (metres < 40 ? 125 : 150) * scale;
-    const x = clamp(top.originX + (Math.random() * 2 - 1) * reach, 8, width() - platformWidth - 8);
+    // Choose the next centre from the actual descending crossing time, including
+    // acceleration from rest and a margin for changing direction mid-flight.
+    const reach = Math.min(metres < 40 ? 125 : 150, jumpHorizontalReach(gap / scale)) * scale;
+    const previousCenter = top.originX + top.w / 2;
+    const x = clamp(previousCenter + (Math.random() * 2 - 1) * reach - platformWidth / 2, 8, width() - platformWidth - 8);
     const roll = Math.random();
     const springChance = metres > 20 ? .12 : .06;
     const movingChance = metres > 75 ? .15 : 0;
@@ -618,12 +634,14 @@
     }
     // Resolve the first crossed top surface, not insertion order in the generator.
     const newBottom = p.y + p.h;
-    const candidates = s.platforms.filter(platform => !platform.broken && p.vy > 0 &&
+    const candidates = s.platforms.filter(platform => !platform.broken && p.vy > 40 * scale &&
       oldBottom <= platform.y + 2 * scale && newBottom >= platform.y).sort((a, b) => a.y - b.y);
     for (const platform of candidates) {
       const t = clamp((platform.y - oldBottom) / Math.max(.001, newBottom - oldBottom), 0, 1);
       const crossingX = Math.abs(p.x - oldX) > width() / 2 ? p.x : oldX + (p.x - oldX) * t;
-      if (crossingX + p.w * .63 > platform.x + platform.w * .08 && crossingX + p.w * .37 < platform.x + platform.w * .92) {
+      const grace = 3 * scale;
+      if (crossingX + p.w * .63 > platform.x + platform.w * .08 - grace &&
+          crossingX + p.w * .37 < platform.x + platform.w * .92 + grace) {
         if (platform.type === 'fake') {
           breakJumpPlatform(platform);
           continue;
@@ -843,17 +861,17 @@
     const spec = BUBBLE_SPECS[stage];
     return {
       x, y, r: spec.radius * scale, stage,
-      vx: direction * (34 + stage * 8) * scale,
-      vy: -spec.bounce * .64 * scale,
+      vx: direction * ((34 + bubbleLevel * 3.6) * .5) * scale,
+      vy: 0,
       colorIndex, spin: Math.random() * 6, impact: 0, age: 0
     };
   }
 
   // Spawn positions, time limits and the platform match the mobile game's first three levels.
   const LEVELS = [
-    { time: 58, spawns: [[.32, 0, 1, false]], obstacles: [] },
-    { time: 58, spawns: [[.22, 1, 1, false], [.78, 1, -1, false]], obstacles: [{ x: .38 * 680, y: .5 * 400, w: .24 * 680, h: .035 * 400 }] },
-    { time: 62, spawns: [[.24, 0, 1, false], [.72, 1, -1, true]], obstacles: [] }
+    { time: 58, spawns: [[.32, 0, 1, false]], obstacles: [], drops: ['wide', 'extraLife'] },
+    { time: 58, spawns: [[.22, 1, 1, false], [.78, 1, -1, false]], obstacles: [{ x: .38 * 680, y: .5 * 400, w: .24 * 680, h: .035 * 400 }], drops: ['wide', 'slow', 'shield', 'extraLife'] },
+    { time: 62, spawns: [[.24, 0, 1, false], [.72, 1, -1, true]], obstacles: [], drops: ['wide', 'extraLife'] }
   ];
 
   function initBubblePaws(keepProgress = false) {
@@ -869,12 +887,19 @@
         w: 54 * scale, h: 62 * scale,
         vx: 0, facing: 1, invincible: 0, shootPose: 0, walkTime: 0, walkBlend: 0, shootBlend: 0
       },
-      bubbles: level.spawns.map(([x, stage, dir, wood], i) => Object.assign(makeBubble(w * x, (82 + i * 25) * scale, stage, dir, i), { wood, hp: wood ? 2 : 1 })),
+      bubbles: level.spawns.map(([x, stage, dir, wood], i) => {
+        const radius = BUBBLE_SPECS[stage].radius * scale;
+        const safeHalfWidth = (96 + BUBBLE_SPECS[stage].radius) * scale;
+        const rawX = w * x;
+        const safeX = Math.abs(rawX - w / 2) < safeHalfWidth
+          ? w / 2 + Math.sign(rawX - w / 2 || dir) * safeHalfWidth : rawX;
+        return Object.assign(makeBubble(clamp(safeX, radius, w - radius), (36 + BUBBLE_SPECS[stage].radius + 14) * scale, stage, dir, i), { wood, hp: wood ? 2 : 1 });
+      }),
       obstacles: level.obstacles.map(o => ({ ...o })),
       harpoons: [], particles: [], floats: [], rings: [], lives: keepProgress ? previousLives : 5, remaining: level.time,
       shootCooldown: 0, hits: 0, combo: 0, comboTimer: 0,
       grace: 1.6, shake: 0, flash: 0, clearDelay: 0, elapsed: 0, fireBuffer: 0,
-      effects: { wide: 0, slow: 0 }, pickups: [], pops: 0, powerDrops: 0, nextPowerAt: 1
+      effects: { wide: 0, slow: 0 }, shield: 0, pickups: [], pops: 0, powerDrops: 0, nextPowerAt: 1
     };
     actionBtn.textContent = copy().fire;
     actionBtn.style.opacity = '1';
@@ -932,7 +957,7 @@
     if (bubble.stage < BUBBLE_SPECS.length - 1) {
       const childStage = bubble.stage + 1;
       const childSpec = BUBBLE_SPECS[childStage];
-      const offset = childSpec.radius * bubbleScale() * .44;
+      const offset = childSpec.radius * bubbleScale();
       const left = makeBubble(bubble.x - offset, bubble.y, childStage, -1, (bubble.colorIndex + 1) % BUBBLE_COLORS.length);
       const right = makeBubble(bubble.x + offset, bubble.y, childStage, 1, (bubble.colorIndex + 2) % BUBBLE_COLORS.length);
       const childSpeed = Math.abs(bubble.vx) + 8 * bubbleScale();
@@ -948,7 +973,8 @@
     if (!s.bubbles.length) s.clearDelay = .62;
     else if (s.pops >= s.nextPowerAt) {
       // An early drop teaches the feature; subsequent drops stay sparse and alternate.
-      const type = s.powerDrops % 2 === 0 ? 'wide' : 'slow';
+      const available = LEVELS[bubbleLevel].drops;
+      const type = available[s.powerDrops % available.length];
       s.pickups.push({ type, x: clamp(bubble.x - 14, 6, width() - 34), y: clamp(bubble.y - 14, 48, height() - 64), w: 28, h: 28, life: 9, phase: 0 });
       s.powerDrops += 1; s.nextPowerAt = s.pops + 4 + Math.floor(Math.random() * 3);
     }
@@ -965,6 +991,15 @@
   function loseBubbleLife() {
     const s = bubbleState;
     if (!running || s.grace > 0 || s.player.invincible > 0) return;
+    if (s.shield > 0) {
+      s.shield = 0;
+      s.player.invincible = .45;
+      s.shake = 4;
+      s.rings.push({ x: s.player.x + s.player.w / 2, y: s.player.y + s.player.h / 2, radius: 22, life: .45, maxLife: .45, color: PICKUP_COLORS.shield });
+      spawnParticles(s.particles, s.player.x + s.player.w / 2, s.player.y + s.player.h / 2, ['#7ff5cd', '#ffffff'], 12, 105);
+      playSfx('hit', .11);
+      return;
+    }
     s.lives -= 1;
     s.shake = 12;
     s.flash = .24;
@@ -1026,7 +1061,13 @@
       pickup.life -= dt; pickup.phase += dt * 3;
       pickup.y = Math.min(floor - pickup.h, pickup.y + 115 * scale * dt);
       if (overlaps(p, pickup)) {
-        activatePower(s, pickup.type, pickup.x + 14, pickup.y + 14);
+        if (pickup.type === 'shield' || pickup.type === 'extraLife') {
+          if (pickup.type === 'shield') s.shield = 1;
+          else s.lives = Math.min(9, s.lives + 1);
+          addFloatingScore(s, pickup.x + 14, pickup.y, copy()[pickup.type], PICKUP_COLORS[pickup.type]);
+          spawnParticles(s.particles, pickup.x + 14, pickup.y + 14, [PICKUP_COLORS[pickup.type], '#ffffff'], 16, 100);
+          playSfx('bubblePower', .22);
+        } else activatePower(s, pickup.type, pickup.x + 14, pickup.y + 14);
         s.pickups.splice(i, 1);
       } else if (pickup.life <= 0) s.pickups.splice(i, 1);
     }
@@ -1207,8 +1248,13 @@
       const bob = Math.sin(pickup.phase) * 2;
       ctx.save(); ctx.globalAlpha = pickup.life < 1.5 ? .55 + Math.sin(pickup.phase * 4) * .3 : 1;
       ctx.fillStyle = '#102034bb'; ctx.beginPath(); ctx.arc(pickup.x + 14, pickup.y + 14 + bob, 20, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = POWER_UPS[pickup.type].color; ctx.lineWidth = 2; ctx.stroke();
-      drawSprite(art[pickup.type], pickup.x, pickup.y + bob, 28, 28); ctx.restore();
+      ctx.strokeStyle = PICKUP_COLORS[pickup.type]; ctx.lineWidth = 2; ctx.stroke();
+      if (!art[pickup.type] || !drawSprite(art[pickup.type], pickup.x, pickup.y + bob, 28, 28)) {
+        ctx.fillStyle = PICKUP_COLORS[pickup.type]; ctx.font = '900 26px Nunito, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(pickup.type === 'shield' ? '◆' : '♥', pickup.x + 14, pickup.y + 24 + bob);
+        ctx.textAlign = 'start';
+      }
+      ctx.restore();
     }
     drawRings(s.rings, alpha);
     for (const current of s.harpoons) {
@@ -1248,8 +1294,8 @@
     ctx.beginPath();
     ctx.ellipse(p.x + p.w / 2, floor + 2, p.w * .36, 4 * bubbleScale(), 0, 0, Math.PI * 2);
     ctx.fill();
-    if (p.invincible > 0 || s.grace > 0) {
-      ctx.save(); ctx.strokeStyle = '#a5f4ec'; ctx.lineWidth = 2;
+    if (p.invincible > 0 || s.grace > 0 || s.shield > 0) {
+      ctx.save(); ctx.strokeStyle = s.shield > 0 ? '#7ff5cd' : '#a5f4ec'; ctx.lineWidth = s.shield > 0 ? 3 : 2;
       ctx.globalAlpha = .42 + Math.sin(s.elapsed * 7) * .15;
       ctx.beginPath(); ctx.ellipse(p.x + p.w / 2, p.y + p.h * .56, p.w * .52, p.h * .6, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
     }
@@ -1262,6 +1308,7 @@
 
     let hudX = 10;
     hudX += drawHudPill(`♥ ${s.lives}`, hudX, 9, '#d74755') + 5;
+    if (s.shield > 0) hudX += drawHudPill(`◆ ${copy().shield}`, hudX, 9, '#16806b') + 5;
     hudX += drawHudPill(`${Math.ceil(s.remaining)} ${copy().seconds}`, hudX, 9, '#174c72') + 5;
     hudX += drawHudPill(`${s.bubbles.length} ${copy().bubbles}`, hudX, 9, '#7d4cc4') + 5;
     if (s.combo >= 2 && hudX < w - 95) drawHudPill(`${copy().combo} ×${s.combo}`, hudX, 9, '#ca7a16');
