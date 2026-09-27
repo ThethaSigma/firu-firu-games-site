@@ -419,6 +419,49 @@ html[lang=tr] .games-showcase .section-head::before { content: '01 / OYUNLAR'; }
   animation: none;
   transform: none;
 }
+
+/* A compact editorial link after the game cards. */
+.press-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin-top: 42px;
+  padding: 28px 32px;
+  border: 1px solid #a99dff55;
+  border-radius: 22px;
+  background: linear-gradient(105deg, #22234b 0%, #16283e 100%);
+  box-shadow: 0 18px 38px #05091638;
+}
+.press-note-copy { max-width: 760px; }
+.press-kicker {
+  margin: 0 0 8px;
+  color: var(--mint);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+.press-note h3 { margin: 0 0 7px; font-size: clamp(1.45rem, 2.6vw, 2rem); }
+.press-note-copy > p:last-child { margin: 0; color: #c6d5e9; font-size: 14px; line-height: 1.6; }
+.press-link {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 10px 17px;
+  border: 1px solid #ffffff66;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
+  transition: background .2s, transform .2s;
+}
+.press-link:hover { background: #ffffff18; transform: translateY(-2px); }
+@media (max-width: 760px) {
+  .press-note { align-items: flex-start; flex-direction: column; gap: 18px; margin-top: 28px; padding: 24px; }
+  .press-link { flex: auto; }
+}
 .hero-world > .hero-world-bubble { display: none; }
 .hero-world::after {
   background: linear-gradient(180deg, #07112812 0%, transparent 49%, #07112814 68%, #071128b8 100%);
