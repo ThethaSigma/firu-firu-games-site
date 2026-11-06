@@ -8,6 +8,11 @@
   clip-path: inset(0 0 calc(100% - var(--crew-progress, 0%)) 0 round 16px);
 }
 [data-crew-state="typing"], [data-crew-state="placed"], [data-crew-state="sizing"] { opacity: 1 !important; }
+[data-crew-heading="true"][data-crew-state="typing"] {
+  transform-origin: top left !important;
+  transform: scale(var(--crew-heading-scale, .62)) !important;
+  transition: none !important;
+}
 [data-crew-kind="box"][data-crew-state="sizing"] {
   transform-origin: top left !important;
   transform: translate(var(--crew-shift-x, 0px), var(--crew-shift-y, 0px)) scale(var(--crew-scale-x, 1), var(--crew-scale-y, 1)) !important;

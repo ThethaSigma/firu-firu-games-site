@@ -7,7 +7,7 @@
   if (!replay || !window.requestAnimationFrame) return;
   const palette = ['#9f1239', '#111111', '#b91c1c', '#27272a', '#7f1d1d', '#450a0a'];
   const names = ['Firu', 'Paw', 'Pixel', 'Pop', 'Jump', 'Studio', 'Cloud', 'Bone', 'Nova', 'Milo', 'Luna', 'Atlas', 'Echo', 'Comet', 'Orbit', 'Spark', 'Byte', 'Blink', 'Patch', 'Bean', 'Moss', 'Pip', 'Rune', 'Dot', 'Leaf', 'Kite', 'Flux', 'Iris', 'Opal', 'Fern', 'Star', 'Wave', 'Sunny', 'Coco', 'Dash', 'Lumi'];
-  const seenKey = 'firu-build-crew-v4';
+  const seenKey = 'firu-build-crew-v5';
   const random = (min, max) => min + Math.random() * (max - min);
   const clamp = n => Math.max(0, Math.min(1, n));
   const ease = n => 1 - Math.pow(1 - clamp(n), 3);
@@ -31,6 +31,9 @@
       this.safety = 0;
       this.prepared = false;
       this.lastFrame = 0;
+      this.corrections = 0;
+      this.paragraphs = 0;
+      this.boxes = 0;
     }
     on(target, event, fn, options) {
       target.addEventListener(event, fn, options);
@@ -49,6 +52,7 @@
         initialScale: { x: random(.4, .6), y: random(.35, .55) },
         shift: { x: random(-20, 20), y: random(12, 28) }
       };
+      task.adjustment = kind === 'box' && ++this.boxes % 4 === 1 ? .08 : .025;
       if (kind === 'text') {
         const entries = [];
         const walker = document.createTreeWalker(element, 4);
@@ -60,6 +64,14 @@
         }
         task.text = entries;
         task.characters = entries.reduce((sum, entry) => sum + entry.parts.length, 0);
+        task.heading = /^(H2|H3)$/.test(element.tagName);
+        if (!task.heading && element.tagName === 'P' && task.characters > 30 && ++this.paragraphs % 7 === 1 && this.corrections < 3) {
+          const parts = entries.flatMap(entry => entry.parts);
+          let index = Math.floor(parts.length * .58);
+          while (index < parts.length - 3 && !/[a-zA-ZçğıöşüÇĞİÖŞÜ]/.test(parts[index])) index++;
+          task.correction = { index, letter: parts[index] === 'x' ? 'z' : 'x' };
+          this.corrections++;
+        }
         task.travelEnd = random(.07, .13);
         task.drawEnd = random(.3, .42);
         task.duration = (Math.min(4200, Math.max(850, task.characters * random(27, 38))) + 180) / (1 - task.drawEnd);
@@ -164,9 +176,12 @@
         if (!task.bounds || task.state === 'done') continue;
         const state = task.element.dataset.crewState;
         if (state === 'sizing') task.element.dataset.crewState = 'placed';
+        const headingScale = task.element.style.getPropertyValue('--crew-heading-scale');
+        if (headingScale) task.element.style.setProperty('--crew-heading-scale', '1');
         const r = task.element.getBoundingClientRect();
         task.bounds = { left: r.left + (window.scrollX || 0), top: r.top + (window.scrollY || 0), width: r.width, height: r.height };
         if (state === 'sizing') task.element.dataset.crewState = state;
+        if (headingScale) task.element.style.setProperty('--crew-heading-scale', headingScale);
       }
       this.wake();
     }
@@ -205,8 +220,10 @@
       task.element.removeAttribute('data-crew-state');
       task.element.removeAttribute('data-crew-kind');
       task.element.removeAttribute('data-crew-edge');
+      task.element.removeAttribute('data-crew-correction');
+      task.element.removeAttribute('data-crew-heading');
       task.element.style.removeProperty('--crew-progress');
-      for (const property of ['--crew-scale-x', '--crew-scale-y', '--crew-shift-x', '--crew-shift-y']) task.element.style.removeProperty(property);
+      for (const property of ['--crew-scale-x', '--crew-scale-y', '--crew-shift-x', '--crew-shift-y', '--crew-heading-scale']) task.element.style.removeProperty(property);
       if (task.kind === 'tile') task.element.remove();
     }
     complete(task, now = 0) {
@@ -279,18 +296,55 @@
       task.accessibleLabel = task.text.map(entry => entry.original).join('').trim();
       task.savedLabel = task.element.getAttribute('aria-label');
       if (task.accessibleLabel) task.element.setAttribute('aria-label', task.accessibleLabel);
+      if (task.heading) {
+        task.element.dataset.crewHeading = 'true';
+        task.element.style.setProperty('--crew-heading-scale', '.62');
+      }
       this.typeText(task, 0);
     }
-    typeText(task, count) {
-      if (task.typed === count) return;
+    typeText(task, count, mistake = false) {
+      if (task.typed === count && task.mistake === mistake) return;
       task.typed = count;
+      task.mistake = mistake;
       let remaining = count;
+      let offset = 0;
       for (const entry of task.text || []) {
         const length = Math.max(0, Math.min(entry.parts.length, remaining));
         remaining -= length;
-        const next = entry.parts.slice(0, length).join('');
+        const parts = entry.parts.slice(0, length);
+        const correctionIndex = task.correction?.index - offset;
+        if (mistake && correctionIndex >= 0 && correctionIndex < length) parts[correctionIndex] = task.correction.letter;
+        const next = parts.join('');
+        offset += entry.parts.length;
         if (entry.written !== next) { entry.node.data = next; entry.written = next; }
       }
+    }
+    writeProgress(task, progress) {
+      if (task.heading) {
+        this.typeText(task, Math.min(task.characters, Math.floor(progress / .62 * task.characters)));
+        const grow = clamp((progress - .62) / .34);
+        const scale = grow < .72 ? .62 + .42 * ease(grow / .72) : 1.04 - .04 * ease((grow - .72) / .28);
+        task.element.style.setProperty('--crew-heading-scale', String(scale));
+        return grow;
+      }
+      if (!task.correction) {
+        this.typeText(task, Math.min(task.characters, Math.floor(progress / .94 * task.characters)));
+        return 0;
+      }
+      const index = task.correction.index;
+      if (progress < .47) {
+        this.typeText(task, Math.floor(progress / .47 * index));
+      } else if (progress < .57) {
+        task.element.dataset.crewCorrection = 'mistake';
+        this.typeText(task, index + 1, true);
+      } else if (progress < .65) {
+        task.element.dataset.crewCorrection = 'delete';
+        this.typeText(task, index);
+      } else {
+        task.element.dataset.crewCorrection = 'corrected';
+        this.typeText(task, Math.min(task.characters, index + Math.floor((progress - .65) / .31 * (task.characters - index))));
+      }
+      return 0;
     }
     restoreText(task) {
       if (!task.textStarted) return;
@@ -313,13 +367,13 @@
       let sx, sy, shift;
       if (p < .42) {
         const n = ease(p / .42);
-        sx = initial.x + (1.035 - initial.x) * n; sy = initial.y; shift = 1;
+        sx = initial.x + (1 + task.adjustment - initial.x) * n; sy = initial.y; shift = 1;
       } else if (p < .78) {
         const n = ease((p - .42) / .36);
-        sx = 1.035 - .035 * n; sy = initial.y + (1.035 - initial.y) * n; shift = 1 - n * .25;
+        sx = 1 + task.adjustment * (1 - n); sy = initial.y + (1 + task.adjustment - initial.y) * n; shift = 1 - n * .25;
       } else {
         const n = ease((p - .78) / .22);
-        sx = 1; sy = 1.035 - .035 * n; shift = .75 * (1 - n);
+        sx = 1; sy = 1 + task.adjustment * (1 - n); shift = .75 * (1 - n);
       }
       const width = r.width * sx;
       const viewport = document.documentElement.clientWidth || innerWidth;
@@ -333,6 +387,56 @@
         task.element.style.setProperty('--crew-shift-y', `${task.shift.y * shift}px`);
       }
       return { left, top, width: r.width * sx, height: r.height * sy, right: left + r.width * sx, bottom: top + r.height * sy };
+    }
+    guides(task, target, moving, progress) {
+      if (this.guideCount >= (this.small ? 2 : 4) || progress < .48) return;
+      this.guideCount++;
+      const g = this.g;
+      const tint = '#e11d48';
+      const width = document.documentElement.clientWidth || innerWidth;
+      g.save();
+      g.globalAlpha = Math.min(1, (progress - .48) * 5);
+      g.strokeStyle = tint; g.lineWidth = 1;
+      g.setLineDash([4, 4]);
+      g.beginPath();
+      g.moveTo(target.left, Math.max(75, target.top - 70));
+      g.lineTo(target.left, Math.min(innerHeight - 30, target.bottom + 70));
+      g.moveTo(Math.max(0, target.left - 90), target.top);
+      g.lineTo(Math.min(width, target.right + 90), target.top);
+      g.stroke(); g.setLineDash([]);
+      const delta = Math.abs(moving.left - target.left);
+      if (delta > 1.5 && delta < 40) {
+        const y = Math.max(95, target.top - 18);
+        this.measureGap(target.left, y, moving.left, y, `${Math.round(delta)} px`, tint);
+      }
+      if (progress > .9) {
+        g.fillStyle = tint;
+        g.fillRect(target.left - 3, target.top - 3, 6, 6);
+      }
+      // Show a real gap to an adjacent card, using its final layout bounds.
+      if (task.kind === 'box') {
+        const sibling = task.element.previousElementSibling;
+        if (sibling && sibling.parentElement === task.element.parentElement) {
+          const other = sibling.getBoundingClientRect();
+          const gap = target.left - other.right;
+          if (gap >= 8 && gap <= 90 && Math.abs(other.top - target.top) < 12) {
+            const y = Math.max(95, target.top + Math.min(55, target.height / 2));
+            this.measureGap(other.right, y, target.left, y, `${Math.round(gap)} px`, tint);
+          }
+        }
+      }
+      g.restore();
+    }
+    measureGap(x1, y1, x2, y2, label, color) {
+      const g = this.g;
+      g.strokeStyle = color; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x1, y1 - 4); g.lineTo(x1, y1 + 4);
+      g.moveTo(x1, y1); g.lineTo(x2, y2); g.moveTo(x2, y2 - 4); g.lineTo(x2, y2 + 4); g.stroke();
+      g.font = '700 10px monospace';
+      const w = g.measureText(label).width + 10;
+      const x = Math.max(5, Math.min(innerWidth - w - 5, (x1 + x2 - w) / 2));
+      g.fillStyle = color; g.fillRect(x, y1 - 22, w, 16);
+      g.fillStyle = '#fff'; g.fillText(label, x + 5, y1 - 10);
     }
     textCaret(task, r) {
       const entry = [...(task.text || [])].reverse().find(item => item.written?.length);
@@ -437,6 +541,7 @@
       if (this.dead) return;
       try {
         this.g.clearRect(0, 0, innerWidth, innerHeight);
+        this.guideCount = 0;
         const waiting = this.schedule(now);
         const dt = Math.min(.05, Math.max(0, (now - this.lastFrame) / 1000));
         this.lastFrame = now;
@@ -474,6 +579,7 @@
               const box = this.resizeRect(task, r, draw);
               this.outline(box, Math.min(1, draw * 5), agent.color, task);
               this.dimensions(box, agent.color);
+              this.guides(task, r, box, draw);
               point = { x: box.right, y: box.bottom };
               agent.tool = 'resize';
             } else {
@@ -486,11 +592,18 @@
             this.dimensions(r, agent.color);
             if (task.kind === 'text') {
               task.element.dataset.crewState = 'typing';
-              this.typeText(task, Math.min(task.characters, Math.floor(reveal / .94 * task.characters)));
+              const growing = this.writeProgress(task, reveal);
               const caret = this.textCaret(task, r);
               point = caret;
               agent.tool = 'text';
-              if (Math.floor(now / 350) % 2 === 0) {
+              if (task.heading && growing > 0) {
+                const scale = Number(task.element.style.getPropertyValue('--crew-heading-scale'));
+                const box = { ...r, width: r.width * scale, height: r.height * scale, right: r.left + r.width * scale, bottom: r.top + r.height * scale };
+                point = { x: box.right, y: box.bottom };
+                agent.tool = 'resize';
+                this.guides(task, r, box, growing);
+                this.outline(box, 1, agent.color, task);
+              } else if (Math.floor(now / 350) % 2 === 0) {
                 this.g.strokeStyle = agent.color; this.g.lineWidth = 2;
                 this.g.beginPath(); this.g.moveTo(caret.x, caret.y - caret.height / 2); this.g.lineTo(caret.x, caret.y + caret.height / 2); this.g.stroke();
               }

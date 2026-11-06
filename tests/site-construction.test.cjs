@@ -13,11 +13,12 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
     emit(type, event = {}) { for (const fn of [...(this.listeners.get(type) || [])]) fn(event); }
   }
   const created = [];
+  const drawingLabels = [];
   class TextNode {
     constructor(data) { this.data = data; this.nodeType = 3; this.parentNode = null; }
     get parentElement() { return this.parentNode; }
   }
-  const graphics = new Proxy({ measureText: text => ({ width: text.length * 7 }) }, { get: (target, key) => target[key] || (() => {}) });
+  const graphics = new Proxy({ measureText: text => ({ width: text.length * 7 }), fillText: text => drawingLabels.push(text) }, { get: (target, key) => target[key] || (() => {}) });
   class Element extends Events {
     constructor(tag = 'div', top = 20) {
       super(); this.tagName = tag.toUpperCase(); this.nodeType = 1; this.top = top; this.dataset = {}; this.children = []; this.hidden = false; this.attrs = {};
@@ -90,13 +91,13 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
   function tick() {
     now += 100; const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(now));
     for (const e of created) if (e.dataset.crewState === 'drawing' && !drawingTimes.has(e)) drawingTimes.set(e, now);
-    textFrames.push({ time: now, text: quote.textContent, state: quote.dataset.crewState, box: card.dataset.crewState, scale: card.style.getPropertyValue('--crew-scale-x') });
+    textFrames.push({ time: now, text: quote.textContent, state: quote.dataset.crewState, correction: quote.dataset.crewCorrection, box: card.dataset.crewState, scale: card.style.getPropertyValue('--crew-scale-x'), headingText: below.textContent, headingScale: below.style.getPropertyValue('--crew-heading-scale') });
   }
   function advance() {
     for (let step = 0; step < 160 && frames.size; step++) tick();
   }
   const hidden = () => created.filter(e => !e.removed && e.dataset.crewState);
-  return { window, document, motion, replay, frames, created, brand, panel, download, below, card, quote, advance, tick, textFrames, hidden, drawingTimes, environment };
+  return { window, document, motion, replay, frames, created, brand, panel, download, below, card, quote, advance, tick, textFrames, hidden, drawingTimes, environment, drawingLabels };
 }
 
 test('builds the visible page, sleeps offscreen, and wakes when the next section arrives', async () => {
@@ -145,7 +146,7 @@ test('resizes a box before typing its text, preserves Unicode, and restores layo
   h.window.emit('scroll'); h.advance();
   const partial = h.textFrames.filter(frame => frame.state === 'typing' && frame.text.length > 0 && frame.text.length < original.length);
   assert.ok(partial.length > 3, 'the paragraph must contain real intermediate character prefixes');
-  assert.ok(partial.every(frame => original.startsWith(frame.text) && !/[\uD800-\uDBFF]$/.test(frame.text)));
+  assert.ok(partial.every(frame => (frame.correction === 'mistake' || original.startsWith(frame.text)) && !/[\uD800-\uDBFF]$/.test(frame.text)));
   const sizing = h.textFrames.filter(frame => frame.box === 'sizing');
   assert.ok(new Set(sizing.map(frame => frame.scale)).size > 2);
   assert.ok(Number(sizing[0].scale) < .8);
@@ -155,6 +156,49 @@ test('resizes a box before typing its text, preserves Unicode, and restores layo
   assert.equal(h.quote.style.getPropertyValue('height'), '');
   assert.equal(h.quote.getAttribute('aria-label'), null);
   assert.equal(h.card.style.getPropertyValue('--crew-scale-x'), '');
+});
+
+test('a selected typo is backspaced and corrected without changing the final paragraph', async () => {
+  const h = await harness({ withCard: true });
+  const original = h.quote.textContent;
+  h.advance(); h.below.top = 100; h.card.top = 250; h.quote.top = 270;
+  h.window.emit('scroll'); h.advance();
+  const mistake = h.textFrames.find(frame => frame.correction === 'mistake');
+  const deleted = h.textFrames.find(frame => frame.correction === 'delete');
+  const corrected = h.textFrames.find(frame => frame.correction === 'corrected' && frame.text.length > mistake.text.length);
+  assert.ok(mistake && !original.startsWith(mistake.text));
+  assert.equal(deleted.text.length, mistake.text.length - 1);
+  assert.ok(original.startsWith(deleted.text));
+  assert.ok(corrected && original.startsWith(corrected.text));
+  assert.equal(h.quote.textContent, original);
+  assert.equal(h.quote.dataset.crewCorrection, undefined);
+});
+
+test('headings finish typing small, grow past their target, then settle and remove the transform', async () => {
+  const h = await harness();
+  const original = h.below.textContent;
+  h.advance(); h.below.top = 200; h.window.emit('scroll'); h.advance();
+  const typed = h.textFrames.filter(frame => frame.headingText === original && frame.headingScale);
+  assert.ok(typed.some(frame => Number(frame.headingScale) < .8));
+  assert.ok(typed.some(frame => Number(frame.headingScale) > 1.02));
+  assert.ok(typed.some(frame => Math.abs(Number(frame.headingScale) - 1) < .001));
+  assert.equal(h.below.style.getPropertyValue('--crew-heading-scale'), '');
+  assert.equal(h.below.dataset.crewHeading, undefined);
+  assert.equal(h.below.textContent, original);
+});
+
+test('alignment guides measure displacement and skip removes an unfinished heading scale', async () => {
+  const h = await harness();
+  h.advance(); h.below.top = 200; h.window.emit('scroll');
+  for (let i = 0; i < 100; i++) {
+    h.tick();
+    if (h.below.dataset.crewState === 'typing' && Number(h.below.style.getPropertyValue('--crew-heading-scale')) > .7) break;
+  }
+  assert.ok(h.drawingLabels.some(label => /^\d+ px$/.test(label)));
+  h.created.find(e => e.className === 'crew-skip').emit('click');
+  assert.equal(h.below.style.getPropertyValue('--crew-heading-scale'), '');
+  assert.equal(h.below.dataset.crewHeading, undefined);
+  assert.equal(h.hidden().length, 0);
 });
 
 for (const exit of ['skip', 'language']) test(`${exit} during typing restores text without overwriting translated nodes`, async () => {
