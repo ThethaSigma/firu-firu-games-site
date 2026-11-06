@@ -7,7 +7,7 @@
   if (!replay || !window.requestAnimationFrame) return;
   const palette = ['#9f1239', '#111111', '#b91c1c', '#27272a', '#7f1d1d', '#450a0a'];
   const names = ['Firu', 'Paw', 'Pixel', 'Pop', 'Jump', 'Studio', 'Cloud', 'Bone', 'Nova', 'Milo', 'Luna', 'Atlas', 'Echo', 'Comet', 'Orbit', 'Spark', 'Byte', 'Blink', 'Patch', 'Bean', 'Moss', 'Pip', 'Rune', 'Dot', 'Leaf', 'Kite', 'Flux', 'Iris', 'Opal', 'Fern', 'Star', 'Wave', 'Sunny', 'Coco', 'Dash', 'Lumi'];
-  const seenKey = 'firu-build-crew-v3';
+  const seenKey = 'firu-build-crew-v4';
   const random = (min, max) => min + Math.random() * (max - min);
   const clamp = n => Math.max(0, Math.min(1, n));
   const ease = n => 1 - Math.pow(1 - clamp(n), 3);
@@ -117,11 +117,9 @@
       this.canvas = document.createElement('canvas');
       this.canvas.className = 'crew-canvas';
       this.canvas.setAttribute('aria-hidden', 'true');
-      this.canvas.width = Math.round((document.documentElement.clientWidth || innerWidth) * Math.min(devicePixelRatio || 1, 2));
-      this.canvas.height = Math.round(innerHeight * Math.min(devicePixelRatio || 1, 2));
       this.g = this.canvas.getContext('2d');
       if (!this.g) throw new Error('Canvas is unavailable');
-      this.g.scale(Math.min(devicePixelRatio || 1, 2), Math.min(devicePixelRatio || 1, 2));
+      this.sizeCanvas();
       this.hud = document.createElement('div');
       this.hud.className = 'crew-hud';
       const title = document.createElement('strong');
@@ -150,12 +148,34 @@
       }));
       this.updateHud(false);
     }
+    sizeCanvas() {
+      const ratio = Math.min(devicePixelRatio || 1, 2);
+      this.viewportWidth = innerWidth;
+      this.canvas.width = Math.round((document.documentElement.clientWidth || innerWidth) * ratio);
+      this.canvas.height = Math.round(innerHeight * ratio);
+      this.g.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+    resize() {
+      const width = innerWidth;
+      if (Math.abs(width - this.viewportWidth) > 2) { this.finish('resize'); return; }
+      // Mobile browser chrome changes the height while scrolling. Keep all jobs.
+      this.sizeCanvas();
+      for (const task of this.tasks) {
+        if (!task.bounds || task.state === 'done') continue;
+        const state = task.element.dataset.crewState;
+        if (state === 'sizing') task.element.dataset.crewState = 'placed';
+        const r = task.element.getBoundingClientRect();
+        task.bounds = { left: r.left + (window.scrollX || 0), top: r.top + (window.scrollY || 0), width: r.width, height: r.height };
+        if (state === 'sizing') task.element.dataset.crewState = state;
+      }
+      this.wake();
+    }
     start() {
       this.collect();
       this.setupView();
       document.documentElement.classList.add('crew-active');
       this.on(window, 'scroll', () => this.wake(), { passive: true });
-      this.on(window, 'resize', () => this.finish('resize'));
+      this.on(window, 'resize', () => this.resize());
       this.on(window, 'pagehide', () => this.finish('pagehide'));
       this.on(window, 'keydown', e => { if (e.key === 'Escape' || e.key === 'Tab') this.finish(e.key); }, true);
       this.on(window, 'firu:languagechange', () => this.finish('language'));
@@ -202,29 +222,46 @@
     schedule(now) {
       const ready = [];
       for (const task of this.tasks) {
-        if (task.state !== 'wait') continue;
-        const r = task.element.getBoundingClientRect();
-        if (r.bottom < -20) { this.complete(task); continue; }
-        if (r.top > innerHeight - 15 || r.right <= 0 || r.left >= innerWidth) continue;
+        if (task.state !== 'wait' && task.state !== 'paused') continue;
         if (task.dependency && task.dependency.state !== 'done') continue;
+        const r = task.state === 'paused' ? this.rect(task) : task.element.getBoundingClientRect();
+        if (task.state === 'wait' && r.bottom < -20) { this.complete(task); continue; }
+        if (!this.inView(task, r, true)) continue;
         ready.push(task);
       }
-      ready.sort((a, b) => a.order - b.order);
+      ready.sort((a, b) => (a.state === 'paused' ? 0 : 1) - (b.state === 'paused' ? 0 : 1) || a.order - b.order);
       for (const agent of this.agents) {
         if (agent.task || now < agent.availableAt || !ready.length) continue;
         const task = ready.shift();
         agent.task = task;
         task.agent = agent;
+        const resume = task.state === 'paused';
         task.state = 'active';
-        task.at = now + agent.stagger;
+        task.at = resume ? now - task.resumeOffset : now + agent.stagger;
         agent.stagger = random(20, 280);
         task.from = { x: agent.x, y: agent.y };
-        if (task.kind === 'text' || task.kind === 'box') {
+        if (!resume && (task.kind === 'text' || task.kind === 'box')) {
           const r = task.element.getBoundingClientRect();
           task.bounds = { left: r.left + (window.scrollX || 0), top: r.top + (window.scrollY || 0), width: r.width, height: r.height };
         }
       }
       return ready.length > 0;
+    }
+    inView(task, r, starting = false) {
+      if (r.width <= 0 || r.height <= 0 || r.right <= 0 || r.left >= innerWidth) return false;
+      const visible = Math.min(r.bottom, innerHeight - 24) - Math.max(r.top, 0);
+      if (!starting) return visible >= 2;
+      const threshold = task.kind === 'text' ? Math.min(r.height * .65, 72)
+        : task.kind === 'box' || task.kind === 'panel' ? Math.min(r.height * .28, 140)
+        : Math.min(r.height * .25, 60);
+      return visible >= Math.max(2, threshold);
+    }
+    pause(task, agent, now) {
+      task.resumeOffset = task.elapsed ?? now - task.at;
+      task.state = 'paused';
+      task.agent = null;
+      agent.task = null;
+      agent.availableAt = now;
     }
     rect(task) {
       if (!task.bounds) return task.element.getBoundingClientRect();
@@ -409,15 +446,18 @@
         for (const agent of this.agents) {
           const task = agent.task;
           if (!task) continue;
+          const r = this.rect(task);
+          if (!this.inView(task, r)) { this.pause(task, agent, now); continue; }
           agent.tool = 'arrow';
           busy++;
           if (now < task.at) {
+            task.elapsed = now - task.at;
             this.driftAgent(agent, now, task.from, blend);
             this.drawAgent(agent, agent.id % 2 === 0);
             continue;
           }
           const p = clamp((now - task.at) / task.duration);
-          const r = this.rect(task);
+          task.elapsed = now - task.at;
           if (task.kind === 'text') this.beginText(task, r);
           anchors.push({ x: Math.max(25, Math.min(innerWidth - 25, r.left + r.width / 2)), y: Math.max(40, Math.min(innerHeight - 70, r.top + r.height / 2)) });
           let point;

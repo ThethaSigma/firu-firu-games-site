@@ -75,13 +75,14 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
   const seededMath = Object.create(Math);
   seededMath.random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
   Object.assign(window, { matchMedia: () => motion, requestAnimationFrame: fn => { frames.set(++serial, fn); return serial; }, scrollTo() {} });
-  vm.runInNewContext(source, {
+  const environment = vm.createContext({
     window, document, innerWidth: width, innerHeight: 800, devicePixelRatio: 1, URLSearchParams, Math: seededMath,
     location: { search: '' }, sessionStorage: { getItem: () => saved ? '1' : null, setItem() {} },
     requestAnimationFrame: window.requestAnimationFrame, cancelAnimationFrame: id => frames.delete(id),
     setTimeout: (fn, ms) => { timers.set(++serial, { fn, ms }); return serial; }, clearTimeout: id => timers.delete(id),
     getComputedStyle: () => ({ display: 'block' }), console: { warn() {} }
   });
+  vm.runInContext(source, environment);
   await new Promise(resolve => setImmediate(resolve));
   let now = 0;
   const drawingTimes = new Map();
@@ -95,7 +96,7 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
     for (let step = 0; step < 160 && frames.size; step++) tick();
   }
   const hidden = () => created.filter(e => !e.removed && e.dataset.crewState);
-  return { window, document, motion, replay, frames, created, brand, panel, download, below, card, quote, advance, tick, textFrames, hidden, drawingTimes };
+  return { window, document, motion, replay, frames, created, brand, panel, download, below, card, quote, advance, tick, textFrames, hidden, drawingTimes, environment };
 }
 
 test('builds the visible page, sleeps offscreen, and wakes when the next section arrives', async () => {
@@ -189,8 +190,64 @@ test('different crew timings finish cleanly on narrow and wide screens', async (
 });
 
 for (const event of ['resize', 'firu:languagechange']) test(`${event} leaves no stale masks or hidden content`, async () => {
-  const h = await harness(); h.window.emit(event);
+  const h = await harness();
+  if (event === 'resize') h.environment.innerWidth = 600;
+  h.window.emit(event);
   assert.equal(h.window.firuConstruction.active, false);
+  assert.equal(h.hidden().length, 0);
+});
+
+test('mobile address-bar height changes preserve the crew and resize its canvas', async () => {
+  const h = await harness({ width: 390, withCard: true });
+  h.advance();
+  for (const height of [700, 844, 760, 800]) {
+    h.environment.innerHeight = height;
+    h.window.emit('resize'); h.advance();
+    assert.equal(h.window.firuConstruction.active, true);
+    assert.equal(h.below.dataset.crewState, 'waiting');
+    assert.equal(h.card.dataset.crewState, 'waiting');
+    assert.equal(h.created.find(e => e.className === 'crew-canvas').height, height);
+    assert.equal(h.document.documentElement.dataset.crewResult, undefined);
+  }
+  h.below.top = 120; h.card.top = 250; h.quote.top = 270;
+  h.window.emit('scroll'); h.advance();
+  assert.ok(h.textFrames.some(frame => frame.state === 'typing' && frame.text.length > 0 && frame.text.length < 'Firu 🐾 büyüyor. İki oyun, tek macera.'.length));
+  assert.equal(h.hidden().length, 0);
+});
+
+test('a sliver at the bottom does not start a section before the user can see it', async () => {
+  const h = await harness({ width: 390, withCard: true });
+  h.advance();
+  h.card.top = 770; h.quote.top = 790;
+  h.window.emit('scroll'); h.advance();
+  assert.equal(h.card.dataset.crewState, 'waiting');
+  assert.equal(h.quote.dataset.crewState, 'waiting');
+  h.card.top = 600; h.quote.top = 620;
+  h.window.emit('scroll'); h.advance();
+  assert.equal(h.card.dataset.crewState, undefined);
+  assert.equal(h.quote.dataset.crewState, undefined);
+});
+
+test('typing pauses outside the viewport and resumes at the same character after scrolling back', async () => {
+  const h = await harness({ width: 390, withCard: true });
+  const original = h.quote.textContent;
+  h.advance(); h.below.top = 120; h.card.top = 250; h.quote.top = 270;
+  h.window.emit('scroll');
+  for (let i = 0; i < 120; i++) {
+    h.tick();
+    if (h.quote.dataset.crewState === 'typing' && h.quote.textContent.length > 3 && h.quote.textContent.length < original.length - 3) break;
+  }
+  assert.equal(h.quote.dataset.crewState, 'typing');
+  const partial = h.quote.textContent;
+  h.window.scrollY = 1200; h.window.emit('scroll'); h.advance();
+  assert.equal(h.quote.textContent, partial);
+  assert.equal(h.frames.size, 0, 'offscreen work should sleep rather than finish invisibly');
+  for (let i = 0; i < 80; i++) h.tick();
+  assert.equal(h.quote.textContent, partial);
+  h.window.scrollY = 0; h.window.emit('scroll'); h.tick();
+  assert.equal(h.quote.textContent, partial, 'the paused time must not be counted as typing time');
+  h.advance();
+  assert.equal(h.quote.textContent, original);
   assert.equal(h.hidden().length, 0);
 });
 
