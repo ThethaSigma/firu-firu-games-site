@@ -14,11 +14,12 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
   }
   const created = [];
   const drawingLabels = [];
+  const cursors = [];
   class TextNode {
     constructor(data) { this.data = data; this.nodeType = 3; this.parentNode = null; }
     get parentElement() { return this.parentNode; }
   }
-  const graphics = new Proxy({ measureText: text => ({ width: text.length * 7 }), fillText: text => drawingLabels.push(text) }, { get: (target, key) => target[key] || (() => {}) });
+  const graphics = new Proxy({ measureText: text => ({ width: text.length * 7 }), fillText: text => drawingLabels.push(text), translate: (x, y) => cursors.push({ x, y }) }, { get: (target, key) => target[key] || (() => {}) });
   class Element extends Events {
     constructor(tag = 'div', top = 20) {
       super(); this.tagName = tag.toUpperCase(); this.nodeType = 1; this.top = top; this.dataset = {}; this.children = []; this.hidden = false; this.attrs = {};
@@ -88,8 +89,11 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
   let now = 0;
   const drawingTimes = new Map();
   const textFrames = [];
+  const cursorFrames = [];
   function tick() {
+    cursors.length = 0;
     now += 100; const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(now));
+    cursorFrames.push([...cursors]);
     for (const e of created) if (e.dataset.crewState === 'drawing' && !drawingTimes.has(e)) drawingTimes.set(e, now);
     textFrames.push({ time: now, text: quote.textContent, state: quote.dataset.crewState, correction: quote.dataset.crewCorrection, box: card.dataset.crewState, scale: card.style.getPropertyValue('--crew-scale-x'), headingText: below.textContent, headingScale: below.style.getPropertyValue('--crew-heading-scale') });
   }
@@ -97,8 +101,22 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
     for (let step = 0; step < 160 && frames.size; step++) tick();
   }
   const hidden = () => created.filter(e => !e.removed && e.dataset.crewState);
-  return { window, document, motion, replay, frames, created, brand, panel, download, below, card, quote, advance, tick, textFrames, hidden, drawingTimes, environment, drawingLabels };
+  return { window, document, motion, replay, frames, created, brand, panel, download, below, card, quote, advance, tick, textFrames, cursorFrames, hidden, drawingTimes, environment, drawingLabels };
 }
+
+for (const width of [1000, 390]) test(`only working cursors appear and one remaining heading gets one cursor at width ${width}`, async () => {
+  const h = await harness({ width });
+  h.advance();
+  assert.ok(h.cursorFrames.every(frame => frame.length <= (width < 760 ? 10 : 24)));
+  assert.ok(h.cursorFrames.some(frame => frame.length > 1), 'busy scenes still use multiple workers');
+  const start = h.cursorFrames.length;
+  h.below.top = 250; h.window.emit('scroll'); h.advance();
+  const headingFrames = h.cursorFrames.slice(start);
+  assert.ok(headingFrames.some(frame => frame.length === 1));
+  assert.ok(headingFrames.every(frame => frame.length <= 1), 'idle workers must not orbit the single remaining job');
+  assert.ok(h.created.find(e => e.className === 'crew-canvas').removed, 'the cursor overlay disappears after the final job');
+  assert.equal(h.frames.size, 0);
+});
 
 test('builds the visible page, sleeps offscreen, and wakes when the next section arrives', async () => {
   const h = await harness();

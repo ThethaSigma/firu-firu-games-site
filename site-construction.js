@@ -7,7 +7,7 @@
   if (!replay || !window.requestAnimationFrame) return;
   const palette = ['#9f1239', '#111111', '#b91c1c', '#27272a', '#7f1d1d', '#450a0a'];
   const names = ['Firu', 'Paw', 'Pixel', 'Pop', 'Jump', 'Studio', 'Cloud', 'Bone', 'Nova', 'Milo', 'Luna', 'Atlas', 'Echo', 'Comet', 'Orbit', 'Spark', 'Byte', 'Blink', 'Patch', 'Bean', 'Moss', 'Pip', 'Rune', 'Dot', 'Leaf', 'Kite', 'Flux', 'Iris', 'Opal', 'Fern', 'Star', 'Wave', 'Sunny', 'Coco', 'Dash', 'Lumi'];
-  const seenKey = 'firu-build-crew-v5';
+  const seenKey = 'firu-build-crew-v6';
   const random = (min, max) => min + Math.random() * (max - min);
   const clamp = n => Math.max(0, Math.min(1, n));
   const ease = n => 1 - Math.pow(1 - clamp(n), 3);
@@ -30,7 +30,6 @@
       this.lastHud = 0;
       this.safety = 0;
       this.prepared = false;
-      this.lastFrame = 0;
       this.corrections = 0;
       this.paragraphs = 0;
       this.boxes = 0;
@@ -152,11 +151,10 @@
       this.progress.appendChild(this.fill);
       this.hud.append(title, this.status, this.skip, this.progress);
       document.body.append(this.canvas, this.hud);
-      this.agents = Array.from({ length: this.small ? 16 : 36 }, (_, i) => ({
+      this.agents = Array.from({ length: this.small ? 10 : 24 }, (_, i) => ({
         id: i, x: random(15, innerWidth - 20), y: random(40, innerHeight * .8),
         color: palette[i % palette.length], name: names[i % names.length], task: null,
-        availableAt: 0, stagger: random(0, 850), phase: random(0, Math.PI * 2),
-        drift: random(.55, 1.4), radius: random(25, this.small ? 65 : 140)
+        availableAt: 0, stagger: random(0, 850), phase: random(0, Math.PI * 2)
       }));
       this.updateHud(false);
     }
@@ -529,13 +527,6 @@
       }
       g.restore();
     }
-    driftAgent(agent, now, anchor, blend) {
-      const t = now * .001 * agent.drift + agent.phase;
-      const x = Math.max(10, Math.min(innerWidth - 25, anchor.x + Math.cos(t * 1.7) * agent.radius));
-      const y = Math.max(15, Math.min(innerHeight - 50, anchor.y + Math.sin(t * 1.3) * agent.radius * .65));
-      agent.x += (x - agent.x) * blend;
-      agent.y += (y - agent.y) * blend;
-    }
     frame(now) {
       this.raf = 0;
       if (this.dead) return;
@@ -543,10 +534,6 @@
         this.g.clearRect(0, 0, innerWidth, innerHeight);
         this.guideCount = 0;
         const waiting = this.schedule(now);
-        const dt = Math.min(.05, Math.max(0, (now - this.lastFrame) / 1000));
-        this.lastFrame = now;
-        const blend = 1 - Math.exp(-dt * 7);
-        const anchors = [];
         let busy = 0;
         for (const agent of this.agents) {
           const task = agent.task;
@@ -557,14 +544,11 @@
           busy++;
           if (now < task.at) {
             task.elapsed = now - task.at;
-            this.driftAgent(agent, now, task.from, blend);
-            this.drawAgent(agent, agent.id % 2 === 0);
             continue;
           }
           const p = clamp((now - task.at) / task.duration);
           task.elapsed = now - task.at;
           if (task.kind === 'text') this.beginText(task, r);
-          anchors.push({ x: Math.max(25, Math.min(innerWidth - 25, r.left + r.width / 2)), y: Math.max(40, Math.min(innerHeight - 70, r.top + r.height / 2)) });
           let point;
           if (p < task.travelEnd) {
             const move = ease(p / task.travelEnd);
@@ -631,13 +615,6 @@
           agent.y = Math.max(-35, Math.min(innerHeight + 35, point.y));
           this.drawAgent(agent);
           if (p === 1) this.complete(task, now);
-        }
-        if (busy || waiting) for (const agent of this.agents) {
-          if (agent.task) continue;
-          agent.tool = 'arrow';
-          const anchor = anchors[agent.id % Math.max(1, anchors.length)] || { x: innerWidth / 2, y: innerHeight / 2 };
-          this.driftAgent(agent, now, anchor, blend);
-          this.drawAgent(agent, agent.id % 3 === 0);
         }
         if (now - this.lastHud > 200) { this.updateHud(busy > 0 || waiting); this.lastHud = now; }
         if (this.done === this.tasks.length) { this.finish('complete'); return; }
