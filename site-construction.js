@@ -5,9 +5,9 @@
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const replay = document.getElementById('buildReplay');
   if (!replay || !window.requestAnimationFrame) return;
-  const palette = ['#83edd1', '#ffd369', '#b6a4ff', '#ff8baf', '#72caff', '#f2a56b'];
+  const palette = ['#9f1239', '#111111', '#b91c1c', '#27272a', '#7f1d1d', '#450a0a'];
   const names = ['Firu', 'Paw', 'Pixel', 'Pop', 'Jump', 'Studio', 'Cloud', 'Bone', 'Nova', 'Milo', 'Luna', 'Atlas', 'Echo', 'Comet', 'Orbit', 'Spark', 'Byte', 'Blink', 'Patch', 'Bean', 'Moss', 'Pip', 'Rune', 'Dot', 'Leaf', 'Kite', 'Flux', 'Iris', 'Opal', 'Fern', 'Star', 'Wave', 'Sunny', 'Coco', 'Dash', 'Lumi'];
-  const seenKey = 'firu-build-crew-v2';
+  const seenKey = 'firu-build-crew-v3';
   const random = (min, max) => min + Math.random() * (max - min);
   const clamp = n => Math.max(0, Math.min(1, n));
   const ease = n => 1 - Math.pow(1 - clamp(n), 3);
@@ -45,13 +45,39 @@
         element, kind, dependency, state: 'wait', at: 0, duration, agent: null,
         order: Math.random(), corner: Math.floor(random(0, 4)), reverse: Math.random() < .5,
         travelEnd: random(.15, .3), drawEnd: random(.55, .78), bend: random(-130, 130),
-        edge: ['left', 'right', 'top', 'bottom'][Math.floor(random(0, 4))]
+        edge: ['left', 'right', 'top', 'bottom'][Math.floor(random(0, 4))],
+        initialScale: { x: random(.4, .6), y: random(.35, .55) },
+        shift: { x: random(-20, 20), y: random(12, 28) }
       };
+      if (kind === 'text') {
+        const entries = [];
+        const walker = document.createTreeWalker(element, 4);
+        let node;
+        while ((node = walker.nextNode())) {
+          if (!node.data.trim() || node.parentElement?.closest('[aria-hidden="true"]')) continue;
+          if (getComputedStyle(node.parentElement || element).display === 'none') continue;
+          entries.push({ node, original: node.data, parts: Array.from(node.data), written: null });
+        }
+        task.text = entries;
+        task.characters = entries.reduce((sum, entry) => sum + entry.parts.length, 0);
+        task.travelEnd = random(.07, .13);
+        task.drawEnd = random(.3, .42);
+        task.duration = (Math.min(4200, Math.max(850, task.characters * random(27, 38))) + 180) / (1 - task.drawEnd);
+      }
       element.dataset.crewState = 'waiting';
       element.dataset.crewKind = kind;
       if (kind === 'tile') element.dataset.crewEdge = task.edge;
       this.tasks.push(task);
       return task;
+    }
+    addContents(element, dependency) {
+      const accepted = [];
+      element.querySelectorAll('h2, h3, p, small, figcaption, a.btn, button.btn, .press-link').forEach(child => {
+        if (child.closest('[aria-hidden="true"]') || accepted.some(parent => parent.contains(child))) return;
+        accepted.push(child);
+        this.add(child, 'text', dependency);
+      });
+      element.querySelectorAll('img').forEach(image => this.add(image, 'image', dependency));
     }
     collect() {
       const hero = document.querySelector('.hero-world');
@@ -72,15 +98,19 @@
         }
       }
       this.add(document.querySelector('.brand'), 'image');
-      document.querySelectorAll('.nav-links a, .language-switch').forEach(e => this.add(e, 'text'));
-      const panel = this.add(document.querySelector('.hero-copy'), 'panel');
-      document.querySelectorAll('.hero-copy .official-store-link, .hero-free, .hero .demo-text-link').forEach(e => this.add(e, 'image', panel));
-      const selectors = '.section-head > h2, .section-head > p, .game-card, .press-note, .story-shot, .process-story-copy, .step, .shipaton-banner, .notebook, .sticky-note, .proto, .quip, .finale > .shell > p, .finale h2, .finale .store-actions';
+      document.querySelectorAll('.nav-links a').forEach(e => this.add(e, 'text'));
+      this.add(document.querySelector('.language-switch'), 'image');
+      const panel = this.add(document.querySelector('.hero-copy'), 'box');
+      document.querySelectorAll('.hero-copy .official-store-link').forEach(e => this.add(e, 'image', panel));
+      document.querySelectorAll('.hero-free, .hero .demo-text-link').forEach(e => this.add(e, 'text', panel));
+      const selectors = '.section-head > h2, .section-head > p, .gossip-head > h2, .gossip-head > p, .game-card, .press-note, .story-shot, .process-story-copy, .step, .shipaton-banner, .notebook, .sticky-note, .proto, .quip, .finale > .shell > p, .finale h2, .finale .store-actions';
       const accepted = [];
       document.querySelectorAll(selectors).forEach(e => {
         if (accepted.some(parent => parent.contains(e))) return;
         accepted.push(e);
-        this.add(e, /^(H2|P)$/.test(e.tagName) ? 'text' : 'panel');
+        const kind = /^(H2|P)$/.test(e.tagName) ? 'text' : e.classList.contains('story-shot') || e.classList.contains('shipaton-banner') || e.classList.contains('store-actions') ? 'panel' : 'box';
+        const task = this.add(e, kind);
+        if (task && kind === 'box') this.addContents(e, task);
       });
     }
     setupView() {
@@ -102,7 +132,7 @@
       this.skip = document.createElement('button');
       this.skip.type = 'button';
       this.skip.className = 'crew-skip';
-      this.skip.addEventListener('click', () => this.finish());
+      this.skip.addEventListener('click', () => this.finish('skip'));
       this.progress = document.createElement('div');
       this.progress.className = 'crew-progress';
       this.progress.setAttribute('role', 'progressbar');
@@ -125,16 +155,18 @@
       this.setupView();
       document.documentElement.classList.add('crew-active');
       this.on(window, 'scroll', () => this.wake(), { passive: true });
-      this.on(window, 'resize', () => this.finish());
-      this.on(window, 'pagehide', () => this.finish());
-      this.on(window, 'keydown', e => { if (e.key === 'Escape' || e.key === 'Tab') this.finish(); }, true);
-      this.on(window, 'firu:languagechange', () => this.finish());
-      this.on(document, 'visibilitychange', () => { if (document.hidden) this.finish(); });
+      this.on(window, 'resize', () => this.finish('resize'));
+      this.on(window, 'pagehide', () => this.finish('pagehide'));
+      this.on(window, 'keydown', e => { if (e.key === 'Escape' || e.key === 'Tab') this.finish(e.key); }, true);
+      this.on(window, 'firu:languagechange', () => this.finish('language'));
+      this.on(document, 'visibilitychange', () => { if (document.hidden) this.finish('hidden'); });
       this.on(document, 'click', e => {
-        if (e.target.closest('a, [data-play], #demoRail, #openDemo')) this.finish();
+        if (e.target.closest('[data-play], #demoRail, #openDemo')) { this.finish('demo'); return; }
+        const link = e.target.closest('a');
+        if (link && !['#oyunlar', '#surec', '#yorumlar', '#top'].includes(link.getAttribute('href'))) this.finish('download');
       }, true);
       // A failed frame or interrupted asset load must never leave content hidden.
-      this.safety = setTimeout(() => this.finish(), 10000);
+      this.safety = setTimeout(() => this.finish('timeout'), 15000);
       Promise.race([document.fonts?.ready || Promise.resolve(), new Promise(r => setTimeout(r, 600))]).then(() => {
         if (this.dead) return;
         this.prepared = true;
@@ -149,10 +181,12 @@
       this.raf = requestAnimationFrame(t => this.frame(t));
     }
     reveal(task) {
+      this.restoreText(task);
       task.element.removeAttribute('data-crew-state');
       task.element.removeAttribute('data-crew-kind');
       task.element.removeAttribute('data-crew-edge');
       task.element.style.removeProperty('--crew-progress');
+      for (const property of ['--crew-scale-x', '--crew-scale-y', '--crew-shift-x', '--crew-shift-y']) task.element.style.removeProperty(property);
       if (task.kind === 'tile') task.element.remove();
     }
     complete(task, now = 0) {
@@ -185,15 +219,115 @@
         task.at = now + agent.stagger;
         agent.stagger = random(20, 280);
         task.from = { x: agent.x, y: agent.y };
+        if (task.kind === 'text' || task.kind === 'box') {
+          const r = task.element.getBoundingClientRect();
+          task.bounds = { left: r.left + (window.scrollX || 0), top: r.top + (window.scrollY || 0), width: r.width, height: r.height };
+        }
       }
       return ready.length > 0;
+    }
+    rect(task) {
+      if (!task.bounds) return task.element.getBoundingClientRect();
+      const { width, height } = task.bounds;
+      const left = task.bounds.left - (window.scrollX || 0);
+      const top = task.bounds.top - (window.scrollY || 0);
+      return { left, top, width, height, right: left + width, bottom: top + height };
+    }
+    beginText(task, r) {
+      if (task.textStarted || !task.text) return;
+      task.textStarted = true;
+      task.savedSize = ['width', 'height'].map(property => ({ property, value: task.element.style.getPropertyValue(property), priority: task.element.style.getPropertyPriority(property) }));
+      task.element.style.setProperty('width', `${r.width}px`);
+      task.element.style.setProperty('height', `${r.height}px`);
+      task.accessibleLabel = task.text.map(entry => entry.original).join('').trim();
+      task.savedLabel = task.element.getAttribute('aria-label');
+      if (task.accessibleLabel) task.element.setAttribute('aria-label', task.accessibleLabel);
+      this.typeText(task, 0);
+    }
+    typeText(task, count) {
+      if (task.typed === count) return;
+      task.typed = count;
+      let remaining = count;
+      for (const entry of task.text || []) {
+        const length = Math.max(0, Math.min(entry.parts.length, remaining));
+        remaining -= length;
+        const next = entry.parts.slice(0, length).join('');
+        if (entry.written !== next) { entry.node.data = next; entry.written = next; }
+      }
+    }
+    restoreText(task) {
+      if (!task.textStarted) return;
+      for (const entry of task.text || []) {
+        // A language switch may replace text nodes. Never overwrite the new copy.
+        if (task.element.contains(entry.node) && entry.node.data === entry.written) entry.node.data = entry.original;
+      }
+      for (const { property, value, priority } of task.savedSize || []) {
+        if (value) task.element.style.setProperty(property, value, priority);
+        else task.element.style.removeProperty(property);
+      }
+      if (task.element.getAttribute('aria-label') === task.accessibleLabel) {
+        if (task.savedLabel !== null) task.element.setAttribute('aria-label', task.savedLabel);
+        else task.element.removeAttribute('aria-label');
+      }
+      task.textStarted = false;
+    }
+    resizeRect(task, r, p) {
+      const initial = task.initialScale;
+      let sx, sy, shift;
+      if (p < .42) {
+        const n = ease(p / .42);
+        sx = initial.x + (1.035 - initial.x) * n; sy = initial.y; shift = 1;
+      } else if (p < .78) {
+        const n = ease((p - .42) / .36);
+        sx = 1.035 - .035 * n; sy = initial.y + (1.035 - initial.y) * n; shift = 1 - n * .25;
+      } else {
+        const n = ease((p - .78) / .22);
+        sx = 1; sy = 1.035 - .035 * n; shift = .75 * (1 - n);
+      }
+      const width = r.width * sx;
+      const viewport = document.documentElement.clientWidth || innerWidth;
+      const left = Math.max(4, Math.min(viewport - width - 4, r.left + task.shift.x * shift));
+      const top = r.top + task.shift.y * shift;
+      if (task.kind === 'box') {
+        task.element.dataset.crewState = 'sizing';
+        task.element.style.setProperty('--crew-scale-x', String(sx));
+        task.element.style.setProperty('--crew-scale-y', String(sy));
+        task.element.style.setProperty('--crew-shift-x', `${left - r.left}px`);
+        task.element.style.setProperty('--crew-shift-y', `${task.shift.y * shift}px`);
+      }
+      return { left, top, width: r.width * sx, height: r.height * sy, right: left + r.width * sx, bottom: top + r.height * sy };
+    }
+    textCaret(task, r) {
+      const entry = [...(task.text || [])].reverse().find(item => item.written?.length);
+      if (entry && document.createRange) {
+        try {
+          const range = document.createRange();
+          const last = Array.from(entry.written).pop();
+          range.setStart(entry.node, entry.written.length - last.length);
+          range.setEnd(entry.node, entry.written.length);
+          const rectangles = Array.from(range.getClientRects()).filter(rect => rect.height > 0 && rect.width > 0);
+          const rect = rectangles[rectangles.length - 1];
+          if (rect) return { x: rect.right + 2, y: rect.top + rect.height / 2, height: rect.height };
+        } catch (_) { /* Empty or replaced text can use the box's origin. */ }
+      }
+      return { x: r.left + 2, y: r.top + 12, height: 22 };
+    }
+    dimensions(r, color) {
+      if (this.small || r.width < 90) return;
+      const g = this.g;
+      const label = `${Math.round(r.width)} × ${Math.round(r.height)}`;
+      g.font = '700 10px monospace';
+      const width = g.measureText(label).width + 12;
+      const y = Math.max(18, r.top - 7);
+      g.fillStyle = color; g.fillRect(r.left, y - 15, width, 19);
+      g.fillStyle = '#fff'; g.fillText(label, r.left + 6, y - 2);
     }
     outline(r, p, color, task) {
       const g = this.g;
       const length = 2 * (r.width + r.height);
       g.save();
-      g.strokeStyle = color;
-      g.lineWidth = 1.3;
+      g.strokeStyle = '#ffffffdf';
+      g.lineWidth = 3.3;
       g.setLineDash([length * clamp(p), length + 1]);
       const corners = [[r.left, r.top], [r.right, r.top], [r.right, r.bottom], [r.left, r.bottom]];
       const direction = task.reverse ? -1 : 1;
@@ -201,9 +335,13 @@
       g.moveTo(...corners[task.corner]);
       for (let i = 1; i <= 4; i++) g.lineTo(...corners[(task.corner + direction * i + 4) % 4]);
       g.stroke();
+      g.strokeStyle = color; g.lineWidth = 1.5; g.stroke();
       g.setLineDash([]);
       for (const [x, y] of [[r.left, r.top], [r.right, r.top], [r.right, r.bottom], [r.left, r.bottom]]) {
-        g.fillStyle = '#0b1429'; g.fillRect(x - 3, y - 3, 6, 6); g.strokeRect(x - 3, y - 3, 6, 6);
+        g.fillStyle = '#fff'; g.fillRect(x - 3, y - 3, 6, 6); g.strokeRect(x - 3, y - 3, 6, 6);
+      }
+      for (const [x, y] of [[r.left + r.width / 2, r.top], [r.right, r.top + r.height / 2], [r.left + r.width / 2, r.bottom], [r.left, r.top + r.height / 2]]) {
+        g.fillStyle = '#fff'; g.fillRect(x - 2, y - 2, 4, 4); g.strokeRect(x - 2, y - 2, 4, 4);
       }
       g.restore();
     }
@@ -218,23 +356,35 @@
       if (d <= r.width) return { x: r.right - d, y: r.bottom };
       return { x: r.left, y: r.bottom - (d - r.width) };
     }
-    drawAgent(agent, alpha = 1, label = true) {
+    drawAgent(agent, label = true) {
       const g = this.g;
       g.save();
-      g.globalAlpha = alpha;
+      g.globalAlpha = 1;
       g.translate(agent.x, agent.y);
-      g.scale(this.small ? .7 : .75, this.small ? .7 : .75);
-      g.shadowColor = '#02071680'; g.shadowBlur = 5; g.shadowOffsetY = 2;
-      g.beginPath();
-      g.moveTo(0, 0); g.lineTo(3, 23); g.lineTo(9, 16); g.lineTo(15, 28); g.lineTo(20, 25); g.lineTo(14, 14); g.lineTo(24, 12); g.closePath();
-      g.fillStyle = agent.color; g.strokeStyle = '#fff'; g.lineWidth = 1.5; g.lineJoin = 'round'; g.fill(); g.stroke();
+      g.scale(.82, .82);
       g.shadowBlur = 0; g.shadowOffsetY = 0;
+      g.beginPath();
+      g.lineJoin = 'miter';
+      if (agent.tool === 'text') {
+        g.moveTo(-5, -12); g.lineTo(5, -12); g.moveTo(0, -12); g.lineTo(0, 12); g.moveTo(-5, 12); g.lineTo(5, 12);
+        g.strokeStyle = '#fff'; g.lineWidth = 5; g.stroke();
+        g.strokeStyle = agent.color; g.lineWidth = 2.5; g.stroke();
+      } else if (agent.tool === 'resize') {
+        g.moveTo(0, 0); g.lineTo(14, 14); g.moveTo(0, 7); g.lineTo(0, 0); g.lineTo(7, 0);
+        g.moveTo(7, 14); g.lineTo(14, 14); g.lineTo(14, 7);
+        g.strokeStyle = '#fff'; g.lineWidth = 5; g.stroke();
+        g.strokeStyle = agent.color; g.lineWidth = 2.5; g.stroke();
+      } else {
+        g.moveTo(0, 0); g.lineTo(0, 26); g.lineTo(7, 19); g.lineTo(13, 31); g.lineTo(18, 28); g.lineTo(12, 17); g.lineTo(25, 17); g.closePath();
+        g.fillStyle = agent.color; g.strokeStyle = '#fff'; g.lineWidth = 2.3; g.fill(); g.stroke();
+      }
       if (label) {
         g.font = '800 11px Nunito, sans-serif';
         const width = g.measureText(agent.name).width + 14;
         g.fillStyle = agent.color;
-        g.beginPath(); g.roundRect(18, 27, width, 21, 5); g.fill();
-        g.fillStyle = '#101426'; g.fillText(agent.name, 25, 41);
+        g.beginPath(); g.roundRect(18, 27, width, 21, 2); g.fill();
+        g.strokeStyle = '#fff'; g.lineWidth = .9; g.stroke();
+        g.fillStyle = '#fff'; g.fillText(agent.name, 25, 41);
       }
       g.restore();
     }
@@ -259,32 +409,60 @@
         for (const agent of this.agents) {
           const task = agent.task;
           if (!task) continue;
+          agent.tool = 'arrow';
           busy++;
           if (now < task.at) {
             this.driftAgent(agent, now, task.from, blend);
-            this.drawAgent(agent, .8, agent.id % 2 === 0);
+            this.drawAgent(agent, agent.id % 2 === 0);
             continue;
           }
           const p = clamp((now - task.at) / task.duration);
-          const r = task.element.getBoundingClientRect();
+          const r = this.rect(task);
+          if (task.kind === 'text') this.beginText(task, r);
           anchors.push({ x: Math.max(25, Math.min(innerWidth - 25, r.left + r.width / 2)), y: Math.max(40, Math.min(innerHeight - 70, r.top + r.height / 2)) });
           let point;
           if (p < task.travelEnd) {
             const move = ease(p / task.travelEnd);
-            const start = this.perimeter(r, 0, task);
+            const start = task.kind === 'text' || task.kind === 'box'
+              ? { x: r.left + task.shift.x, y: r.top + task.shift.y }
+              : this.perimeter(r, 0, task);
             const curve = Math.sin(move * Math.PI) * task.bend;
             point = { x: task.from.x + (start.x - task.from.x) * move + curve, y: task.from.y + (start.y - task.from.y) * move + curve * .6 };
           } else if (p < task.drawEnd) {
             const draw = (p - task.travelEnd) / (task.drawEnd - task.travelEnd);
-            point = this.perimeter(r, draw, task);
-            this.outline(r, draw, agent.color, task);
+            if (task.kind === 'box' || task.kind === 'text') {
+              const box = this.resizeRect(task, r, draw);
+              this.outline(box, Math.min(1, draw * 5), agent.color, task);
+              this.dimensions(box, agent.color);
+              point = { x: box.right, y: box.bottom };
+              agent.tool = 'resize';
+            } else {
+              point = this.perimeter(r, draw, task);
+              this.outline(r, draw, agent.color, task);
+            }
           } else {
             const reveal = clamp((p - task.drawEnd) / (1 - task.drawEnd));
-            const progress = task.kind === 'text' ? Math.ceil(reveal * 22) / 22 : reveal;
-            task.element.dataset.crewState = 'drawing';
-            task.element.style.setProperty('--crew-progress', `${progress * 100}%`);
             this.outline(r, 1, agent.color, task);
-            point = { x: r.left + r.width * reveal, y: task.kind === 'panel' ? r.top + r.height * reveal : r.top + Math.min(r.height, 34) };
+            this.dimensions(r, agent.color);
+            if (task.kind === 'text') {
+              task.element.dataset.crewState = 'typing';
+              this.typeText(task, Math.min(task.characters, Math.floor(reveal / .94 * task.characters)));
+              const caret = this.textCaret(task, r);
+              point = caret;
+              agent.tool = 'text';
+              if (Math.floor(now / 350) % 2 === 0) {
+                this.g.strokeStyle = agent.color; this.g.lineWidth = 2;
+                this.g.beginPath(); this.g.moveTo(caret.x, caret.y - caret.height / 2); this.g.lineTo(caret.x, caret.y + caret.height / 2); this.g.stroke();
+              }
+            } else if (task.kind === 'box') {
+              task.element.dataset.crewState = 'placed';
+              point = { x: r.right, y: r.bottom };
+              agent.tool = 'resize';
+            } else {
+              task.element.dataset.crewState = 'drawing';
+              task.element.style.setProperty('--crew-progress', `${reveal * 100}%`);
+              point = { x: r.left + r.width * reveal, y: task.kind === 'panel' ? r.top + r.height * reveal : r.top + Math.min(r.height, 34) };
+            }
             const wiggle = Math.sin(reveal * 18 + agent.phase) * Math.sin(reveal * Math.PI) * 5;
             if (task.kind === 'tile') {
               if (task.edge === 'left' || task.edge === 'right') {
@@ -295,10 +473,6 @@
                 point.y = task.edge === 'top' ? r.top + r.height * reveal : r.bottom - r.height * reveal;
               }
             }
-            if (!this.small && r.width > 90) {
-              this.g.fillStyle = agent.color; this.g.font = '700 10px monospace';
-              this.g.fillText(`${Math.round(r.width)} × ${Math.round(r.height)}`, r.left + 6, Math.max(12, r.top - 8));
-            }
           }
           agent.x = Math.max(-30, Math.min(innerWidth + 30, point.x));
           agent.y = Math.max(-35, Math.min(innerHeight + 35, point.y));
@@ -307,12 +481,13 @@
         }
         if (busy || waiting) for (const agent of this.agents) {
           if (agent.task) continue;
+          agent.tool = 'arrow';
           const anchor = anchors[agent.id % Math.max(1, anchors.length)] || { x: innerWidth / 2, y: innerHeight / 2 };
           this.driftAgent(agent, now, anchor, blend);
-          this.drawAgent(agent, .6, agent.id % 3 === 0);
+          this.drawAgent(agent, agent.id % 3 === 0);
         }
         if (now - this.lastHud > 200) { this.updateHud(busy > 0 || waiting); this.lastHud = now; }
-        if (this.done === this.tasks.length) { this.finish(); return; }
+        if (this.done === this.tasks.length) { this.finish('complete'); return; }
         if (busy || waiting) {
           this.raf = requestAnimationFrame(t => this.frame(t));
         } else {
@@ -325,7 +500,7 @@
         }
       } catch (error) {
         console.warn('Firu build animation ended safely.', error);
-        this.finish();
+        this.finish('error');
       }
     }
     updateHud(busy) {
@@ -338,7 +513,7 @@
       this.progress.setAttribute('aria-valuenow', String(progress));
       this.fill.style.width = `${progress}%`;
     }
-    finish() {
+    finish(reason = 'manual') {
       if (this.dead) return;
       this.dead = true;
       cancelAnimationFrame(this.raf);
@@ -350,6 +525,7 @@
       this.canvas?.remove();
       this.hud?.remove();
       document.documentElement.classList.remove('crew-active');
+      document.documentElement.dataset.crewResult = reason;
       if (current === this) current = null;
       if (hadFocus) document.querySelector('.hero .official-store-link')?.focus({ preventScroll: true });
     }
@@ -363,11 +539,12 @@
     if (fromTop) window.scrollTo({ top: 0, behavior: 'instant' });
     markSeen();
     const crew = new Crew();
+    delete document.documentElement.dataset.crewResult;
     current = crew;
     try {
       crew.start();
       if (fromTop) crew.skip.focus({ preventScroll: true });
-    } catch (error) { crew.finish(); console.warn('Firu build animation skipped.', error); }
+    } catch (error) { crew.finish('error'); console.warn('Firu build animation skipped.', error); }
   }
   replay.addEventListener('click', () => start(true));
   motion.addEventListener('change', () => { replay.hidden = motion.matches; if (motion.matches) stop(); });

@@ -7,6 +7,12 @@
 [data-crew-kind="panel"][data-crew-state="drawing"] {
   clip-path: inset(0 0 calc(100% - var(--crew-progress, 0%)) 0 round 16px);
 }
+[data-crew-state="typing"], [data-crew-state="placed"], [data-crew-state="sizing"] { opacity: 1 !important; }
+[data-crew-kind="box"][data-crew-state="sizing"] {
+  transform-origin: top left !important;
+  transform: translate(var(--crew-shift-x, 0px), var(--crew-shift-y, 0px)) scale(var(--crew-scale-x, 1), var(--crew-scale-y, 1)) !important;
+  transition: none !important;
+}
 .crew-shutter {
   position: absolute;
   z-index: 1;
@@ -55,6 +61,6 @@ html.crew-active .ticker-track { animation-play-state: paused !important; }
   .crew-hud { left: 12px; bottom: 80px; width: min(330px, calc(100% - 24px)); padding: 13px 14px 11px; gap: 5px 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-crew-state] { opacity: 1 !important; clip-path: none !important; }
+  [data-crew-state] { opacity: 1 !important; clip-path: none !important; transform: none !important; }
   .crew-canvas, .crew-hud, .crew-shutter, .build-replay { display: none !important; }
 }

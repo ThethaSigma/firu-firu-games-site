@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '..', 'site-construction.js'), 'utf8');
 
-async function harness({ reduced = false, saved = false, brokenCanvas = false, width = 1000, seed = 123456 } = {}) {
+async function harness({ reduced = false, saved = false, brokenCanvas = false, width = 1000, seed = 123456, withCard = false } = {}) {
   class Events {
     listeners = new Map();
     addEventListener(type, fn) { if (!this.listeners.has(type)) this.listeners.set(type, new Set()); this.listeners.get(type).add(fn); }
@@ -13,22 +13,35 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
     emit(type, event = {}) { for (const fn of [...(this.listeners.get(type) || [])]) fn(event); }
   }
   const created = [];
+  class TextNode {
+    constructor(data) { this.data = data; this.nodeType = 3; this.parentNode = null; }
+    get parentElement() { return this.parentNode; }
+  }
   const graphics = new Proxy({ measureText: text => ({ width: text.length * 7 }) }, { get: (target, key) => target[key] || (() => {}) });
   class Element extends Events {
     constructor(tag = 'div', top = 20) {
-      super(); this.tagName = tag.toUpperCase(); this.top = top; this.dataset = {}; this.children = []; this.hidden = false; this.attrs = {};
+      super(); this.tagName = tag.toUpperCase(); this.nodeType = 1; this.top = top; this.dataset = {}; this.children = []; this.hidden = false; this.attrs = {};
       const classes = new Set(); this.classList = { add: x => classes.add(x), remove: x => classes.delete(x), contains: x => classes.has(x) };
-      this.style = { setProperty() {}, removeProperty() {} }; created.push(this);
+      const values = new Map();
+      this.style = { setProperty(key, value) { values.set(key, value); }, removeProperty(key) { values.delete(key); }, getPropertyValue: key => values.get(key) || '', getPropertyPriority: () => '' }; created.push(this);
     }
     setAttribute(key, value) { this.attrs[key] = value; }
+    getAttribute(key) { return this.attrs[key] ?? null; }
     removeAttribute(key) { delete this.attrs[key]; if (key.startsWith('data-')) delete this.dataset[key.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())]; }
     getBoundingClientRect() { return { left: 20, right: 300, top: this.top, bottom: this.top + 80, width: 280, height: 80 }; }
-    appendChild(e) { this.children.push(e); e.parent = this; return e; }
+    appendChild(e) { this.children.push(e); e.parent = this; e.parentNode = this; return e; }
     append(...items) { items.forEach(e => this.appendChild(e)); }
     remove() { this.removed = true; if (this.parent) this.parent.children = this.parent.children.filter(e => e !== this); }
-    contains(e) { return this === e || this.children.some(c => c.contains(e)); }
+    contains(e) { return this === e || this.children.some(c => c === e || c.contains?.(e)); }
     getContext() { return brokenCanvas ? null : graphics; }
-    closest() { return this.isLink ? this : null; }
+    closest(selector) { if (selector.includes('aria-hidden')) return this.getAttribute('aria-hidden') === 'true' ? this : this.parentNode?.closest(selector) || null; return this.isLink ? this : null; }
+    querySelectorAll(selector) {
+      const result = [];
+      const walk = e => { for (const child of e.children || []) if (child.nodeType === 1) { if (selector === 'img' ? child.tagName === 'IMG' : /^(H2|H3|P|SMALL|FIGCAPTION)$/.test(child.tagName)) result.push(child); walk(child); } };
+      walk(this); return result;
+    }
+    get textContent() { return this.children.map(child => child.nodeType === 3 ? child.data : child.textContent).join(''); }
+    set textContent(value) { for (const child of this.children) child.parentNode = null; this.children = []; if (value) this.appendChild(new TextNode(value)); }
     focus() { document.activeElement = this; }
   }
   const replay = new Element('button');
@@ -36,6 +49,11 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
   const panel = new Element('div', 300);
   const download = new Element('a', 320); panel.appendChild(download);
   const below = new Element('h2', 1500);
+  below.textContent = 'Firu ile iki oyun';
+  const card = new Element('article', 1700);
+  const quote = new Element('p', 1720);
+  quote.textContent = 'Firu 🐾 büyüyor. İki oyun, tek macera.';
+  card.appendChild(quote);
   const hero = new Element('div');
   const document = new Events();
   Object.assign(document, {
@@ -43,8 +61,12 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
     fonts: { ready: Promise.resolve() },
     getElementById: id => id === 'buildReplay' ? replay : null,
     createElement: tag => new Element(tag),
+    createTreeWalker: element => {
+      const nodes = []; const walk = e => { for (const child of e.children || []) { if (child.nodeType === 3) nodes.push(child); else walk(child); } }; walk(element);
+      let i = 0; return { nextNode: () => nodes[i++] || null };
+    },
     querySelector: selector => ({ '.hero-world': hero, '.brand': brand, '.hero-copy': panel, '.hero .official-store-link': download })[selector] || null,
-    querySelectorAll: selector => selector.startsWith('.hero-copy') ? [download] : selector.startsWith('.section-head') ? [below] : []
+    querySelectorAll: selector => selector.startsWith('.hero-copy') ? [download] : selector.startsWith('.section-head') ? withCard ? [below, card] : [below] : []
   });
   document.documentElement.lang = 'tr';
   const window = new Events();
@@ -63,14 +85,17 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
   await new Promise(resolve => setImmediate(resolve));
   let now = 0;
   const drawingTimes = new Map();
+  const textFrames = [];
+  function tick() {
+    now += 100; const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(now));
+    for (const e of created) if (e.dataset.crewState === 'drawing' && !drawingTimes.has(e)) drawingTimes.set(e, now);
+    textFrames.push({ time: now, text: quote.textContent, state: quote.dataset.crewState, box: card.dataset.crewState, scale: card.style.getPropertyValue('--crew-scale-x') });
+  }
   function advance() {
-    for (let step = 0; step < 100 && frames.size; step++) {
-      now += 100; const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(now));
-      for (const e of created) if (e.dataset.crewState === 'drawing' && !drawingTimes.has(e)) drawingTimes.set(e, now);
-    }
+    for (let step = 0; step < 160 && frames.size; step++) tick();
   }
   const hidden = () => created.filter(e => !e.removed && e.dataset.crewState);
-  return { window, document, motion, replay, frames, created, brand, panel, download, below, advance, hidden, drawingTimes };
+  return { window, document, motion, replay, frames, created, brand, panel, download, below, card, quote, advance, tick, textFrames, hidden, drawingTimes };
 }
 
 test('builds the visible page, sleeps offscreen, and wakes when the next section arrives', async () => {
@@ -110,6 +135,47 @@ test('hero pieces start independently and use multiple reveal directions', async
   assert.ok(tiles.every(e => e.removed && e.dataset.crewEdge === undefined));
 });
 
+test('resizes a box before typing its text, preserves Unicode, and restores layout styles', async () => {
+  const h = await harness({ withCard: true });
+  const original = h.quote.textContent;
+  const node = h.quote.children[0];
+  h.advance();
+  h.below.top = 100; h.card.top = 250; h.quote.top = 270;
+  h.window.emit('scroll'); h.advance();
+  const partial = h.textFrames.filter(frame => frame.state === 'typing' && frame.text.length > 0 && frame.text.length < original.length);
+  assert.ok(partial.length > 3, 'the paragraph must contain real intermediate character prefixes');
+  assert.ok(partial.every(frame => original.startsWith(frame.text) && !/[\uD800-\uDBFF]$/.test(frame.text)));
+  const sizing = h.textFrames.filter(frame => frame.box === 'sizing');
+  assert.ok(new Set(sizing.map(frame => frame.scale)).size > 2);
+  assert.ok(Number(sizing[0].scale) < .8);
+  assert.equal(h.quote.textContent, original);
+  assert.equal(h.quote.children[0], node, 'typing must preserve the original text node');
+  assert.equal(h.quote.style.getPropertyValue('width'), '');
+  assert.equal(h.quote.style.getPropertyValue('height'), '');
+  assert.equal(h.quote.getAttribute('aria-label'), null);
+  assert.equal(h.card.style.getPropertyValue('--crew-scale-x'), '');
+});
+
+for (const exit of ['skip', 'language']) test(`${exit} during typing restores text without overwriting translated nodes`, async () => {
+  const h = await harness({ withCard: true });
+  const original = h.quote.textContent;
+  h.advance(); h.below.top = 100; h.card.top = 250; h.quote.top = 270;
+  h.window.emit('scroll');
+  for (let i = 0; i < 100; i++) {
+    h.tick();
+    if (h.quote.dataset.crewState === 'typing' && h.quote.textContent.length > 0 && h.quote.textContent.length < original.length) break;
+  }
+  assert.equal(h.quote.dataset.crewState, 'typing');
+  assert.equal(h.quote.getAttribute('aria-label'), original);
+  if (exit === 'language') {
+    h.quote.textContent = 'Two games. One adventure.';
+    h.window.emit('firu:languagechange');
+  } else h.created.find(e => e.className === 'crew-skip').emit('click');
+  assert.equal(h.quote.textContent, exit === 'language' ? 'Two games. One adventure.' : original);
+  assert.equal(h.quote.style.getPropertyValue('width'), '');
+  assert.equal(h.hidden().length, 0);
+});
+
 test('different crew timings finish cleanly on narrow and wide screens', async () => {
   for (const width of [390, 1440]) for (const seed of [1, 42, 4096]) {
     const h = await harness({ width, seed });
@@ -133,6 +199,18 @@ test('opening a game cancels construction without cancelling the click', async (
   h.document.emit('click', { target: { closest: () => ({ id: 'openDemo' }) }, preventDefault() { cancelled = true; } });
   assert.equal(h.hidden().length, 0);
   assert.equal(cancelled, false);
+});
+
+test('section navigation keeps building but download links reveal the complete page', async () => {
+  const h = await harness();
+  const click = href => h.document.emit('click', { target: { closest: selector => selector === 'a' ? { getAttribute: () => href } : null } });
+  click('#yorumlar');
+  assert.equal(h.window.firuConstruction.active, true);
+  click('#oyunlar');
+  assert.equal(h.window.firuConstruction.active, true);
+  click('https://play.google.com/store/apps/details?id=com.firufirugames.app');
+  assert.equal(h.window.firuConstruction.active, false);
+  assert.equal(h.hidden().length, 0);
 });
 
 test('reduced motion and saved visits start with the complete site visible', async () => {
