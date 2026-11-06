@@ -19,6 +19,9 @@
 .crew-shutter[data-crew-state="drawing"] {
   clip-path: inset(0 0 0 var(--crew-progress, 0%));
 }
+.crew-shutter[data-crew-state="drawing"][data-crew-edge="right"] { clip-path: inset(0 var(--crew-progress, 0%) 0 0); }
+.crew-shutter[data-crew-state="drawing"][data-crew-edge="top"] { clip-path: inset(var(--crew-progress, 0%) 0 0 0); }
+.crew-shutter[data-crew-state="drawing"][data-crew-edge="bottom"] { clip-path: inset(0 0 var(--crew-progress, 0%) 0); }
 .crew-canvas { position: fixed; inset: 0; z-index: 45; pointer-events: none; width: 100%; height: 100%; }
 .crew-hud {
   position: fixed;

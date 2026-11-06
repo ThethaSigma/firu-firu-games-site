@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '..', 'site-construction.js'), 'utf8');
 
-async function harness({ reduced = false, saved = false, brokenCanvas = false } = {}) {
+async function harness({ reduced = false, saved = false, brokenCanvas = false, width = 1000, seed = 123456 } = {}) {
   class Events {
     listeners = new Map();
     addEventListener(type, fn) { if (!this.listeners.has(type)) this.listeners.set(type, new Set()); this.listeners.get(type).add(fn); }
@@ -50,9 +50,11 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false } 
   const window = new Events();
   const motion = new Events(); motion.matches = reduced;
   const frames = new Map(), timers = new Map(); let serial = 0;
+  const seededMath = Object.create(Math);
+  seededMath.random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
   Object.assign(window, { matchMedia: () => motion, requestAnimationFrame: fn => { frames.set(++serial, fn); return serial; }, scrollTo() {} });
   vm.runInNewContext(source, {
-    window, document, innerWidth: 1000, innerHeight: 800, devicePixelRatio: 1, URLSearchParams,
+    window, document, innerWidth: width, innerHeight: 800, devicePixelRatio: 1, URLSearchParams, Math: seededMath,
     location: { search: '' }, sessionStorage: { getItem: () => saved ? '1' : null, setItem() {} },
     requestAnimationFrame: window.requestAnimationFrame, cancelAnimationFrame: id => frames.delete(id),
     setTimeout: (fn, ms) => { timers.set(++serial, { fn, ms }); return serial; }, clearTimeout: id => timers.delete(id),
@@ -60,13 +62,15 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false } 
   });
   await new Promise(resolve => setImmediate(resolve));
   let now = 0;
+  const drawingTimes = new Map();
   function advance() {
     for (let step = 0; step < 100 && frames.size; step++) {
       now += 100; const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(now));
+      for (const e of created) if (e.dataset.crewState === 'drawing' && !drawingTimes.has(e)) drawingTimes.set(e, now);
     }
   }
   const hidden = () => created.filter(e => !e.removed && e.dataset.crewState);
-  return { window, document, motion, replay, frames, created, brand, panel, download, below, advance, hidden };
+  return { window, document, motion, replay, frames, created, brand, panel, download, below, advance, hidden, drawingTimes };
 }
 
 test('builds the visible page, sleeps offscreen, and wakes when the next section arrives', async () => {
@@ -92,6 +96,30 @@ test('skip restores every target, removes overlays, and restores focus to a down
   assert.equal(h.frames.size, 0);
   assert.equal(h.document.activeElement, h.download);
   assert.ok(h.created.filter(e => e.className === 'crew-hud' || e.className === 'crew-canvas').every(e => e.removed));
+});
+
+test('hero pieces start independently and use multiple reveal directions', async () => {
+  const h = await harness();
+  const tiles = h.created.filter(e => e.className === 'crew-shutter');
+  const directions = new Set(tiles.map(e => e.dataset.crewEdge));
+  assert.equal(directions.size, 4);
+  h.advance();
+  const starts = tiles.map(e => h.drawingTimes.get(e)).filter(time => time !== undefined);
+  assert.ok(starts.length > 12);
+  assert.ok(new Set(starts).size > 8, 'the crew must not reveal its pieces on one shared clock');
+  assert.ok(tiles.every(e => e.removed && e.dataset.crewEdge === undefined));
+});
+
+test('different crew timings finish cleanly on narrow and wide screens', async () => {
+  for (const width of [390, 1440]) for (const seed of [1, 42, 4096]) {
+    const h = await harness({ width, seed });
+    h.advance();
+    assert.equal(h.frames.size, 0);
+    assert.equal(h.download.dataset.crewState, undefined);
+    h.below.top = 200; h.window.emit('scroll'); h.advance();
+    assert.equal(h.window.firuConstruction.active, false);
+    assert.equal(h.hidden().length, 0);
+  }
 });
 
 for (const event of ['resize', 'firu:languagechange']) test(`${event} leaves no stale masks or hidden content`, async () => {
