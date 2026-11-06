@@ -1,0 +1,136 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const source = fs.readFileSync(path.join(__dirname, '..', 'site-construction.js'), 'utf8');
+
+async function harness({ reduced = false, saved = false, brokenCanvas = false } = {}) {
+  class Events {
+    listeners = new Map();
+    addEventListener(type, fn) { if (!this.listeners.has(type)) this.listeners.set(type, new Set()); this.listeners.get(type).add(fn); }
+    removeEventListener(type, fn) { this.listeners.get(type)?.delete(fn); }
+    emit(type, event = {}) { for (const fn of [...(this.listeners.get(type) || [])]) fn(event); }
+  }
+  const created = [];
+  const graphics = new Proxy({ measureText: text => ({ width: text.length * 7 }) }, { get: (target, key) => target[key] || (() => {}) });
+  class Element extends Events {
+    constructor(tag = 'div', top = 20) {
+      super(); this.tagName = tag.toUpperCase(); this.top = top; this.dataset = {}; this.children = []; this.hidden = false; this.attrs = {};
+      const classes = new Set(); this.classList = { add: x => classes.add(x), remove: x => classes.delete(x), contains: x => classes.has(x) };
+      this.style = { setProperty() {}, removeProperty() {} }; created.push(this);
+    }
+    setAttribute(key, value) { this.attrs[key] = value; }
+    removeAttribute(key) { delete this.attrs[key]; if (key.startsWith('data-')) delete this.dataset[key.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())]; }
+    getBoundingClientRect() { return { left: 20, right: 300, top: this.top, bottom: this.top + 80, width: 280, height: 80 }; }
+    appendChild(e) { this.children.push(e); e.parent = this; return e; }
+    append(...items) { items.forEach(e => this.appendChild(e)); }
+    remove() { this.removed = true; if (this.parent) this.parent.children = this.parent.children.filter(e => e !== this); }
+    contains(e) { return this === e || this.children.some(c => c.contains(e)); }
+    getContext() { return brokenCanvas ? null : graphics; }
+    closest() { return this.isLink ? this : null; }
+    focus() { document.activeElement = this; }
+  }
+  const replay = new Element('button');
+  const brand = new Element('a');
+  const panel = new Element('div', 300);
+  const download = new Element('a', 320); panel.appendChild(download);
+  const below = new Element('h2', 1500);
+  const hero = new Element('div');
+  const document = new Events();
+  Object.assign(document, {
+    body: new Element('body'), documentElement: new Element('html'), hidden: false, activeElement: null,
+    fonts: { ready: Promise.resolve() },
+    getElementById: id => id === 'buildReplay' ? replay : null,
+    createElement: tag => new Element(tag),
+    querySelector: selector => ({ '.hero-world': hero, '.brand': brand, '.hero-copy': panel, '.hero .official-store-link': download })[selector] || null,
+    querySelectorAll: selector => selector.startsWith('.hero-copy') ? [download] : selector.startsWith('.section-head') ? [below] : []
+  });
+  document.documentElement.lang = 'tr';
+  const window = new Events();
+  const motion = new Events(); motion.matches = reduced;
+  const frames = new Map(), timers = new Map(); let serial = 0;
+  Object.assign(window, { matchMedia: () => motion, requestAnimationFrame: fn => { frames.set(++serial, fn); return serial; }, scrollTo() {} });
+  vm.runInNewContext(source, {
+    window, document, innerWidth: 1000, innerHeight: 800, devicePixelRatio: 1, URLSearchParams,
+    location: { search: '' }, sessionStorage: { getItem: () => saved ? '1' : null, setItem() {} },
+    requestAnimationFrame: window.requestAnimationFrame, cancelAnimationFrame: id => frames.delete(id),
+    setTimeout: (fn, ms) => { timers.set(++serial, { fn, ms }); return serial; }, clearTimeout: id => timers.delete(id),
+    getComputedStyle: () => ({ display: 'block' }), console: { warn() {} }
+  });
+  await new Promise(resolve => setImmediate(resolve));
+  let now = 0;
+  function advance() {
+    for (let step = 0; step < 100 && frames.size; step++) {
+      now += 100; const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(now));
+    }
+  }
+  const hidden = () => created.filter(e => !e.removed && e.dataset.crewState);
+  return { window, document, motion, replay, frames, created, brand, panel, download, below, advance, hidden };
+}
+
+test('builds the visible page, sleeps offscreen, and wakes when the next section arrives', async () => {
+  const h = await harness();
+  assert.equal(h.window.firuConstruction.active, true);
+  h.advance();
+  assert.equal(h.brand.dataset.crewState, undefined);
+  assert.equal(h.panel.dataset.crewState, undefined);
+  assert.equal(h.download.dataset.crewState, undefined);
+  assert.equal(h.below.dataset.crewState, 'waiting');
+  assert.equal(h.frames.size, 0, 'idle construction must not keep a rendering loop running');
+  h.below.top = 250;
+  h.window.emit('scroll'); h.advance();
+  assert.equal(h.window.firuConstruction.active, false);
+  assert.equal(h.hidden().length, 0);
+});
+
+test('skip restores every target, removes overlays, and restores focus to a download', async () => {
+  const h = await harness();
+  const skip = h.created.find(e => e.className === 'crew-skip'); skip.focus(); skip.emit('click');
+  assert.equal(h.window.firuConstruction.active, false);
+  assert.equal(h.hidden().length, 0);
+  assert.equal(h.frames.size, 0);
+  assert.equal(h.document.activeElement, h.download);
+  assert.ok(h.created.filter(e => e.className === 'crew-hud' || e.className === 'crew-canvas').every(e => e.removed));
+});
+
+for (const event of ['resize', 'firu:languagechange']) test(`${event} leaves no stale masks or hidden content`, async () => {
+  const h = await harness(); h.window.emit(event);
+  assert.equal(h.window.firuConstruction.active, false);
+  assert.equal(h.hidden().length, 0);
+});
+
+test('opening a game cancels construction without cancelling the click', async () => {
+  const h = await harness(); let cancelled = false;
+  h.document.emit('click', { target: { closest: () => ({ id: 'openDemo' }) }, preventDefault() { cancelled = true; } });
+  assert.equal(h.hidden().length, 0);
+  assert.equal(cancelled, false);
+});
+
+test('reduced motion and saved visits start with the complete site visible', async () => {
+  for (const options of [{ reduced: true }, { saved: true }]) {
+    const h = await harness(options);
+    assert.equal(h.window.firuConstruction.active, false);
+    assert.equal(h.hidden().length, 0);
+    assert.equal(h.frames.size, 0);
+  }
+});
+
+test('missing canvas support fails open instead of hiding the page', async () => {
+  const h = await harness({ brokenCanvas: true });
+  assert.equal(h.window.firuConstruction.active, false);
+  assert.equal(h.hidden().length, 0);
+});
+
+test('replay replaces the current crew and motion/background changes reveal the page', async () => {
+  const h = await harness();
+  h.replay.emit('click'); await Promise.resolve(); await Promise.resolve();
+  assert.equal(h.created.filter(e => e.className === 'crew-hud' && !e.removed).length, 1);
+  h.motion.matches = true; h.motion.emit('change');
+  assert.equal(h.hidden().length, 0);
+  assert.equal(h.replay.hidden, true);
+  h.motion.matches = false; h.motion.emit('change'); h.replay.emit('click');
+  h.document.hidden = true; h.document.emit('visibilitychange');
+  assert.equal(h.hidden().length, 0);
+  assert.equal(h.window.firuConstruction.active, false);
+});
