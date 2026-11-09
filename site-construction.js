@@ -7,7 +7,7 @@
   if (!replay || !window.requestAnimationFrame) return;
   const palette = ['#9f1239', '#111111', '#b91c1c', '#27272a', '#7f1d1d', '#450a0a'];
   const names = ['Firu', 'Paw', 'Pixel', 'Pop', 'Jump', 'Studio', 'Cloud', 'Bone', 'Nova', 'Milo', 'Luna', 'Atlas', 'Echo', 'Comet', 'Orbit', 'Spark', 'Byte', 'Blink', 'Patch', 'Bean', 'Moss', 'Pip', 'Rune', 'Dot', 'Leaf', 'Kite', 'Flux', 'Iris', 'Opal', 'Fern', 'Star', 'Wave', 'Sunny', 'Coco', 'Dash', 'Lumi'];
-  const seenKey = 'firu-build-crew-v7';
+  const seenKey = 'firu-build-crew-v8';
   const random = (min, max) => min + Math.random() * (max - min);
   const clamp = n => Math.max(0, Math.min(1, n));
   const ease = n => 1 - Math.pow(1 - clamp(n), 3);
@@ -75,7 +75,7 @@
         task.drawEnd = random(.3, .42);
         task.duration = (Math.min(4200, Math.max(850, task.characters * random(27, 38))) + 180) / (1 - task.drawEnd);
       }
-      task.duration *= .75;
+      task.duration *= .38;
       element.dataset.crewState = 'waiting';
       element.dataset.crewKind = kind;
       if (kind === 'tile') element.dataset.crewEdge = task.edge;
@@ -155,7 +155,7 @@
       this.agents = Array.from({ length: this.small ? 10 : 24 }, (_, i) => ({
         id: i, x: random(15, innerWidth - 20), y: random(40, innerHeight * .8),
         color: palette[i % palette.length], name: names[i % names.length], task: null,
-        availableAt: 0, stagger: random(0, 600), phase: random(0, Math.PI * 2)
+        availableAt: 0, stagger: random(0, 180), phase: random(0, Math.PI * 2)
       }));
       this.updateHud(false);
     }
@@ -232,7 +232,7 @@
       this.reveal(task);
       if (task.agent) {
         task.agent.task = null;
-        task.agent.availableAt = now + random(70, 350);
+        task.agent.availableAt = now + random(20, 100);
       }
     }
     schedule(now) {
@@ -254,7 +254,7 @@
         const resume = task.state === 'paused';
         task.state = 'active';
         task.at = resume ? now - task.resumeOffset : now + agent.stagger;
-        agent.stagger = random(15, 180);
+        agent.stagger = random(10, 60);
         task.from = { x: agent.x, y: agent.y };
         if (!resume && (task.kind === 'text' || task.kind === 'box')) {
           const r = task.element.getBoundingClientRect();

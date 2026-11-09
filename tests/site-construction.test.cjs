@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '..', 'site-construction.js'), 'utf8');
 
-async function harness({ reduced = false, saved = false, brokenCanvas = false, width = 1000, seed = 123456, withCard = false, frameMs = 100 } = {}) {
+async function harness({ reduced = false, saved = false, brokenCanvas = false, width = 1000, seed = 123456, withCard = false, frameMs = 32, animationSource = source } = {}) {
   class Events {
     listeners = new Map();
     addEventListener(type, fn) { if (!this.listeners.has(type)) this.listeners.set(type, new Set()); this.listeners.get(type).add(fn); }
@@ -84,7 +84,7 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
     setTimeout: (fn, ms) => { timers.set(++serial, { fn, ms }); return serial; }, clearTimeout: id => timers.delete(id),
     getComputedStyle: () => ({ display: 'block' }), console: { warn() {} }
   });
-  vm.runInContext(source, environment);
+  vm.runInContext(animationSource, environment);
   await new Promise(resolve => setImmediate(resolve));
   let now = 0;
   const drawingTimes = new Map();
@@ -101,8 +101,19 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
     for (let step = 0; step < Math.ceil(16000 / frameMs) && frames.size; step++) tick();
   }
   const hidden = () => created.filter(e => !e.removed && e.dataset.crewState);
-  return { window, document, motion, replay, frames, created, brand, panel, download, below, card, quote, advance, tick, textFrames, cursorFrames, hidden, drawingTimes, environment, drawingLabels };
+  return { window, document, motion, replay, frames, created, brand, panel, download, below, card, quote, advance, tick, textFrames, cursorFrames, hidden, drawingTimes, environment, drawingLabels, get elapsed() { return now; } };
 }
+
+for (const width of [1440, 390]) test(`opening and the next section finish within the faster timing budget at width ${width}`, async () => {
+  const h = await harness({ width, withCard: true, frameMs: 16 });
+  h.advance();
+  assert.ok(h.elapsed <= 2500, `opening took ${h.elapsed} ms`);
+  const openingEnd = h.elapsed;
+  h.below.top = 100; h.card.top = 250; h.quote.top = 270;
+  h.window.emit('scroll'); h.advance();
+  assert.equal(h.hidden().length, 0);
+  assert.ok(h.elapsed - openingEnd <= 1800, `section took ${h.elapsed - openingEnd} ms`);
+});
 
 for (const width of [1000, 390]) test(`only working cursors appear and one remaining heading gets one cursor at width ${width}`, async () => {
   const h = await harness({ width });
