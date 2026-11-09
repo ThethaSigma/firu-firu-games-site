@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '..', 'site-construction.js'), 'utf8');
 
-async function harness({ reduced = false, saved = false, brokenCanvas = false, width = 1000, seed = 123456, withCard = false } = {}) {
+async function harness({ reduced = false, saved = false, brokenCanvas = false, width = 1000, seed = 123456, withCard = false, frameMs = 100 } = {}) {
   class Events {
     listeners = new Map();
     addEventListener(type, fn) { if (!this.listeners.has(type)) this.listeners.set(type, new Set()); this.listeners.get(type).add(fn); }
@@ -92,13 +92,13 @@ async function harness({ reduced = false, saved = false, brokenCanvas = false, w
   const cursorFrames = [];
   function tick() {
     cursors.length = 0;
-    now += 100; const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(now));
+    now += frameMs; const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(now));
     cursorFrames.push([...cursors]);
     for (const e of created) if (e.dataset.crewState === 'drawing' && !drawingTimes.has(e)) drawingTimes.set(e, now);
     textFrames.push({ time: now, text: quote.textContent, state: quote.dataset.crewState, correction: quote.dataset.crewCorrection, box: card.dataset.crewState, scale: card.style.getPropertyValue('--crew-scale-x'), headingText: below.textContent, headingScale: below.style.getPropertyValue('--crew-heading-scale') });
   }
   function advance() {
-    for (let step = 0; step < 160 && frames.size; step++) tick();
+    for (let step = 0; step < Math.ceil(16000 / frameMs) && frames.size; step++) tick();
   }
   const hidden = () => created.filter(e => !e.removed && e.dataset.crewState);
   return { window, document, motion, replay, frames, created, brand, panel, download, below, card, quote, advance, tick, textFrames, cursorFrames, hidden, drawingTimes, environment, drawingLabels };
@@ -156,7 +156,7 @@ test('hero pieces start independently and use multiple reveal directions', async
 });
 
 test('resizes a box before typing its text, preserves Unicode, and restores layout styles', async () => {
-  const h = await harness({ withCard: true });
+  const h = await harness({ withCard: true, frameMs: 16 });
   const original = h.quote.textContent;
   const node = h.quote.children[0];
   h.advance();
@@ -193,7 +193,7 @@ test('a selected typo is backspaced and corrected without changing the final par
 });
 
 test('headings finish typing small, grow past their target, then settle and remove the transform', async () => {
-  const h = await harness();
+  const h = await harness({ frameMs: 16 });
   const original = h.below.textContent;
   h.advance(); h.below.top = 200; h.window.emit('scroll'); h.advance();
   const typed = h.textFrames.filter(frame => frame.headingText === original && frame.headingScale);
